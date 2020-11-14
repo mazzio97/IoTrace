@@ -1,0 +1,16 @@
+{
+  "name": "tracy",
+  "version": "1.0.0",
+  "description": "A contact tracing app in IOTA",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@iota/converter": "^1.0.0-beta.30",
+    "@iota/core": "^1.0.0-beta.30",
+    "@iota/mam": "^0.7.3"
+  }
+}
