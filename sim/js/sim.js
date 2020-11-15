@@ -30,7 +30,7 @@ window.onload = function() {
 
         console.log("clicked on x:" + clicked_x + " y:" + clicked_y)
 
-        for (i = 0; i < agents.length; i++) {
+        for (var i = 0; i < agents.length; i++) {
             var dx = clicked_x - agents[i].x
             var dy = clicked_y - agents[i].y
             if((dx * dx + dy * dy) <= (Dim.agent_radius * Dim.agent_radius)) {
@@ -103,7 +103,7 @@ window.onload = function() {
         context.fillStyle = agent.state.color
 
         if (agent.selected == true) {
-            context.lineWidth = Dim.selected_stroke
+            context.lineWidth = Dim.selected_stroke_width
             context.strokeStyle = Colors.selected_stroke
             context.stroke()
         }
