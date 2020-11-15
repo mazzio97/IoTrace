@@ -1,7 +1,9 @@
+import MedicalStatus from './medic.js'
 import { Colors, Dim } from './view.js'
 
 export default class Agent {
-    constructor(initial_state, x, y, velocity=0.35) {
+    constructor(name, initial_state, x, y, medical_status=new MedicalStatus(), velocity=0.35) {
+        this.name = name
         this.state = initial_state
         this.x = x
         this.y = y
@@ -9,6 +11,7 @@ export default class Agent {
         this.target_y = y
         this.velocity = velocity
         this.selected = false
+        this.medical_status = medical_status
     }
 
     move(target_x, target_y) {
@@ -36,8 +39,9 @@ export default class Agent {
 // Model
 const State = {
     NORMAL: { status: "normal", color: Colors.normal },
-    NOTIFIED: { status: "notified", color: Colors.notified },
     INFECTED: { status: "infected", color: Colors.infected },
+    NOTIFIED: { status: "notified", color: Colors.notified },
+    QUARANTINED: { status: "quarantined", color: Colors.quarantined }
 }
 
 export { Agent, State }
