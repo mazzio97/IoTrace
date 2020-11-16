@@ -1,5 +1,6 @@
 import MedicalStatus from './medic.js'
-import { Colors, Dim } from './view.js'
+import { Colors, Dim, Time } from './view.js'
+import { generateSeed } from './generate.js'
 
 export default class Agent {
     constructor(name, initial_state, x, y, medical_status=new MedicalStatus(), velocity=0.35) {
@@ -12,11 +13,23 @@ export default class Agent {
         this.velocity = velocity
         this.selected = false
         this.medical_status = medical_status
+        this.last_notification_date = undefined
+        this.seed = generateSeed()
     }
 
     move(target_x, target_y) {
         this.target_x = target_x
         this.target_y = target_y
+    }
+
+    notify(date) {
+        if (this.last_notification_date == undefined 
+            || date - this.last_notification_date >= Time.notification) {
+
+            this.last_notification_date = new Date(date)
+            console.log(this.last_notification_date + " ping")
+        }
+        
     }
 
     update() {

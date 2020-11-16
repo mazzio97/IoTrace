@@ -1,11 +1,9 @@
 import { Agent, State } from './agent.js'
 import MedicalStatus from './medic.js'
-import { Colors, Dim } from './view.js'
+import { Colors, Dim, Time, timestep} from './view.js'
 
 // Time counter
 let date = new Date()
-// Timestep in seconds
-const timestep = 100
 
 // List of agents
 let agents = [
@@ -77,7 +75,7 @@ window.onload = function() {
         agents.forEach(a => a.update())
 
         // Update date
-        date.setSeconds(date.getSeconds() + timestep)
+        date.setMilliseconds(date.getMilliseconds() + timestep)
 
         // Draw agents
         agents.forEach(a => drawAgent(a))
@@ -103,7 +101,10 @@ window.onload = function() {
             })
         })
 
-        // Notification (from the app)
+        // Write notification (from the app)
+        agents.forEach(a => a.notify(date))
+
+        // Read notification (from the app)
         // TODO
 
         // Quarantine (after 14 days from infection or after 2 days from notification)
@@ -111,9 +112,9 @@ window.onload = function() {
             return a.state == State.INFECTED || a.state == State.NOTIFIED
         }).forEach(a => {
             if ((a.medical_status.infection_date != undefined && 
-                date - a.medical_status.infection_date > 14 * 8.64e+7) || 
+                date - a.medical_status.infection_date > Time.sickness) || 
                 (a.medical_status.notification_date != undefined &&
-                date - a.medical_status.notification_date > 2 * 8.64e+7)) {
+                date - a.medical_status.notification_date > Time.visit)) {
 
                 a.medical_status.quarantined_date = new Date(date.getTime())
                 a.state = State.QUARANTINED
