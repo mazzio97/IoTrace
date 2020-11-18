@@ -1,9 +1,10 @@
 import MedicalStatus from './medic.js'
 import { Colors, Dim, Time } from './view.js'
 import { generateSeed } from './generate.js'
+import { MamGate } from './mam_gate.js'
 
 export default class Agent {
-    constructor(name, initial_state, x, y, medical_status=new MedicalStatus(), velocity=0.35) {
+    constructor(name, initial_state, x, y, medical_status = new MedicalStatus(), velocity=0.35) {
         this.name = name
         this.state = initial_state
         this.x = x
@@ -15,6 +16,7 @@ export default class Agent {
         this.medical_status = medical_status
         this.last_notification_date = undefined
         this.seed = generateSeed()
+        this.channel = new MamGate('public', 'https://nodes.devnet.iota.org', this.seed)
     }
 
     move(target_x, target_y) {
@@ -27,9 +29,15 @@ export default class Agent {
             || date - this.last_notification_date >= Time.notification) {
 
             this.last_notification_date = new Date(date)
-            console.log(this.last_notification_date + " ping")
+            
+            /* await */ this.channel.publish({
+                message: "Message from " + this.name,
+                position: this.x + ", " + this.y,
+                date: this.last_notification_date
+            }).then(async root =>
+                console.log(root)
+            )
         }
-        
     }
 
     update() {
