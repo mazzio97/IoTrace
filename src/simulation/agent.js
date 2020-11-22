@@ -1,16 +1,19 @@
 import MedicalStatus from './medic.js'
 import { Colors, Dim, Time } from './view.js'
-import { generateSeed } from './generate.js'
-import { MamGate } from './mam_gate.js'
+import { generateSeed } from '../iota/generate.js'
+import { MamGate } from '../iota/mam_gate.js'
+
+const newTargetProb = 0.003
 
 export default class Agent {
-    constructor(name, initial_state, x, y, medical_status = new MedicalStatus(), velocity=0.35) {
+    constructor(name, initial_state, home, medical_status = new MedicalStatus(), velocity=1.0) {
         this.name = name
         this.state = initial_state
-        this.x = x
-        this.y = y
-        this.target_x = x
-        this.target_y = y
+        this.home = home
+        this.x = home.getRandomX()
+        this.y = home.getRandomY()
+        this.target_x = this.x
+        this.target_y = this.y
         this.velocity = velocity
         this.selected = false
         this.medical_status = medical_status
@@ -40,20 +43,30 @@ export default class Agent {
         }
     }
 
-    update() {
+    update(places) {
         var delta_x = (this.target_x - this.x)
         var delta_y = (this.target_y - this.y)
         var length = Math.sqrt(delta_x * delta_x + delta_y * delta_y)
 
-        if (Math.abs(delta_x) > Dim.epsilon) { 
-            delta_x /= length
-            this.x = this.x + delta_x * this.velocity        
+        // Movement
+        if (Math.abs(delta_x) > Dim.epsilon) {
+            this.x = this.x + delta_x * this.velocity / length      
+        }
+        if (Math.abs(delta_y) > Dim.epsilon) {
+            this.y = this.y + delta_y * this.velocity / length
         }
 
-        if (Math.abs(delta_y) > Dim.epsilon) {
-            delta_y /= length
-            this.y = this.y + delta_y * this.velocity
-        }     
+        // If quarantined, then says at the home corner
+        // Otherwise, when target is reached, new target can be chosen with probability p
+        if (this.state == State.QUARANTINED) {
+            let c = this.home.corner
+            this.move(c[0], c[1])
+        } else if (Math.abs(delta_x) < Dim.epsilon && Math.abs(delta_y) < Dim.epsilon) {
+            if (Math.random() < newTargetProb) {
+                let place = places[Math.floor(places.length * Math.random())]
+                this.move(place.getRandomX(), place.getRandomY())
+            }
+        }        
     }
 }
 

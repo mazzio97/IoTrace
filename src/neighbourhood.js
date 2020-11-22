@@ -1,18 +1,33 @@
-import { Agent, State } from './agent.js'
-import MedicalStatus from './medic.js'
-import { Colors, Dim, Time, timestep} from './view.js'
+import { Agent, State } from './simulation/agent.js'
+import { Place } from './simulation/places.js'
+import MedicalStatus from './simulation/medic.js'
+import { Colors, Dim, Time, timestep } from './simulation/view.js'
 
-// Time counter
+// Time variables
 let date = new Date()
+let updateTime = 1 / 30.0 // 30 fps
+
+// List of places
+let radius = 80
+let places = new Array(
+    new Place('Giuliani\'s', radius + Dim.offset, radius + Dim.offset, radius, 'TopLeft'),
+    new Place('Mazzieri\'s', Dim.width - (radius + Dim.offset), radius + Dim.offset, radius, 'TopRight'),
+    new Place('Lombardi\'s', radius + Dim.offset, Dim.height - (radius + Dim.offset), radius, 'DownLeft'),
+    new Place('SomeoneElse\'s', Dim.width - (radius + Dim.offset), Dim.height - (radius + Dim.offset), radius, 'DownRight'),
+    new Place('Pub', 600, 200, 1.2 * radius),
+    new Place('Mall', 1000, 350, 1.6 * radius),
+    new Place('Campus', 700, 500, 1.4 * radius)
+)
 
 // List of agents
-let agents = [
-    new Agent("Alice", State.INFECTED, 50, 50, new MedicalStatus(new Date(date.getTime()))), 
-    new Agent("Bob", State.NORMAL, 80, 150),
-    new Agent("Charlie", State.NORMAL, 185, 120),
-    new Agent("David", State.NORMAL, 40, 210),
-    new Agent("Ellen", State.NORMAL, 220, 320)
-]
+let agents = [1, 2, 3, 4, 5].flatMap( idx => [
+    new Agent("G" + idx, State.NORMAL, places[0]),
+    new Agent("M" + idx, State.NORMAL, places[1]),
+    new Agent("L" + idx, State.NORMAL, places[2]),
+    new Agent("S" + idx, State.NORMAL, places[3])
+])
+agents[agents.length - 1].state = State.INFECTED
+agents[agents.length - 1].medical_status = new MedicalStatus(new Date(date.getTime()))
 
 // Index of the selected agent
 let agent_selected = undefined
@@ -20,12 +35,12 @@ let agent_selected = undefined
 window.onload = function() {
     var canvas = document.getElementById("scene")
     // Stretch the canvas to the window size
-    canvas.width = window.innerWidth
-    canvas.height = window.innerHeight
+    canvas.width = Dim.width - 10
+    canvas.height = Dim.height - 10
     var context = canvas.getContext("2d")
     context.font = "10px Arial"
 
-    reset()
+    update()
 
     canvas.addEventListener("click", function(event) {
         var clicked_x = event.clientX
@@ -61,21 +76,24 @@ window.onload = function() {
         }
     }, false)
 
-    // Model functions
-    function reset() {
-        // Reset (initial draw)
-        agents.forEach(a => drawAgent(a))
-    }
-
     function update() {
+        // Call this function again.
+        // window.requestAnimationFrame(update)
+        setTimeout(function() {
+            window.requestAnimationFrame(update)
+        }, updateTime)
+
         // Clear canvas
         context.clearRect(0, 0, canvas.width, canvas.height)
 
         // For each agent update the position
-        agents.forEach(a => a.update())
+        agents.forEach(a => a.update(places))
 
         // Update date
         date.setMilliseconds(date.getMilliseconds() + timestep)
+
+        // Draw places
+        places.forEach(p => drawPlace(p))
 
         // Draw agents
         agents.forEach(a => drawAgent(a))
@@ -102,7 +120,7 @@ window.onload = function() {
         })
 
         // Write notification (from the app)
-        agents.forEach(a => a.notify(date))
+        // agents.forEach(a => a.notify(date))
 
         // Read notification (from the app)
         // TODO
@@ -120,9 +138,13 @@ window.onload = function() {
                 a.state = State.QUARANTINED
             }
         })
+    }
 
-        // Call this function again.
-        window.requestAnimationFrame(update)
+    function drawPlace(place) {
+        context.setLineDash([5, 5])
+        context.strokeStyle = Colors.place_line
+        context.strokeRect(place.xMin, place.yMin, place.xMax - place.xMin, place.yMax - place.yMin)
+        context.fillText(place.name, place.xMin + 5, place.yMin - 5)
     }
 
     // Agent graphic functions
@@ -152,7 +174,7 @@ window.onload = function() {
 
         // Name
         context.fillStyle = Colors.text
-        context.fillText(agent.name, agent.x, agent.y - Dim.agent_radius);
+        context.fillText(agent.name, agent.x, agent.y - Dim.agent_radius)
     }
 
     function drawGUI() {
@@ -162,10 +184,6 @@ window.onload = function() {
             (date.getMonth() + 1) + " " + 
             date.getHours() + ":" + 
             date.getMinutes()
-        context.fillText(date_string, 10, canvas.height - 10);
+        context.fillText(date_string, canvas.width / 2, canvas.height - 10);
     }
-
-    setTimeout(function() {
-        window.requestAnimationFrame(update)
-    }, 500)
 }
