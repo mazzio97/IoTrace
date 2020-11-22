@@ -1,11 +1,10 @@
 import { Agent, State } from './simulation/agent.js'
 import { Place } from './simulation/places.js'
 import MedicalStatus from './simulation/medic.js'
-import { Colors, Dim, Time, timestep } from './simulation/view.js'
+import { Colors, Dim, Time } from './simulation/constants.js'
 
 // Time variables
-let date = new Date()
-let updateTime = 1 / 30.0 // 30 fps
+let date = Time.initialDate
 
 // List of places
 let radius = 80
@@ -28,27 +27,25 @@ let agents = [1, 2, 3, 4, 5].flatMap( idx => [
 ])
 agents[agents.length - 1].state = State.INFECTED
 agents[agents.length - 1].medical_status = new MedicalStatus(new Date(date.getTime()))
+agents = new Array(agents[0], agents[1]) // TODO: remove
 
 // Index of the selected agent
 let agent_selected = undefined
 
-window.onload = function() {
+window.onload = () => {
     var canvas = document.getElementById("scene")
     // Stretch the canvas to the window size
     canvas.width = Dim.width - 10
     canvas.height = Dim.height - 10
-    var context = canvas.getContext("2d")
-    context.font = "10px Arial"
+    canvas.getContext("2d").font = "10px Arial"
 
     update()
 
-    canvas.addEventListener("click", function(event) {
+    canvas.addEventListener("click", event => {
         var clicked_x = event.clientX
         var clicked_y = event.clientY
         clicked_x -= canvas.offsetLeft
         clicked_y -= canvas.offsetTop
-
-        console.log("clicked on x:" + clicked_x + " y:" + clicked_y)
 
         for (var i = 0; i < agents.length; i++) {
             var dx = clicked_x - agents[i].x
@@ -77,30 +74,16 @@ window.onload = function() {
     }, false)
 
     function update() {
-        // Call this function again.
-        // window.requestAnimationFrame(update)
-        setTimeout(function() {
-            window.requestAnimationFrame(update)
-        }, updateTime)
+        // Function recursively called every clock milliseconds
+        setTimeout(() => window.requestAnimationFrame(update), Time.clock)
 
-        // Clear canvas
-        context.clearRect(0, 0, canvas.width, canvas.height)
+        tick()
 
-        // For each agent update the position
-        agents.forEach(a => a.update(places))
-
-        // Update date
-        date.setMilliseconds(date.getMilliseconds() + timestep)
-
-        // Draw places
-        places.forEach(p => drawPlace(p))
-
-        // Draw agents
-        agents.forEach(a => drawAgent(a))
-
-        // Draw GUI
-        drawGUI()
-
+        /*
+         * TODO:
+         * LOGIC SHOULD BE MOVED OUTSIDE
+         */
+        
         // Trigger events
         // Infection (contact with an infected agent)
         agents.filter(a => {
@@ -119,9 +102,6 @@ window.onload = function() {
             })
         })
 
-        // Write notification (from the app)
-        // agents.forEach(a => a.notify(date))
-
         // Read notification (from the app)
         // TODO
 
@@ -138,52 +118,25 @@ window.onload = function() {
                 a.state = State.QUARANTINED
             }
         })
+
+        draw()
     }
 
-    function drawPlace(place) {
-        context.setLineDash([5, 5])
-        context.strokeStyle = Colors.place_line
-        context.strokeRect(place.xMin, place.yMin, place.xMax - place.xMin, place.yMax - place.yMin)
-        context.fillText(place.name, place.xMin + 5, place.yMin - 5)
+    function tick() {
+        agents.forEach(a => a.update(places))
+        agents.forEach(a => {
+            const writeDate = new Date(date)
+            a.write(date)
+        })
+        date.setMilliseconds(date.getMilliseconds() + Time.clockScale)
     }
 
-    // Agent graphic functions
-    function drawAgent(agent) {
-        // Body
-        context.beginPath()
-        context.arc(agent.x, agent.y, Dim.agent_radius, 0, 2 * Math.PI, false)
-
-        // Colors depend on the state
-        context.fillStyle = agent.state.color
-
-        if (agent.selected == true) {
-            context.lineWidth = Dim.selected_stroke_width
-            context.strokeStyle = Colors.selected_stroke
-            context.stroke()
-        }
-
-        context.fill()
-
-        // Infection area
-        if (agent.state == State.INFECTED) {
-            context.beginPath()
-            context.arc(agent.x, agent.y, Dim.infection_radius, 0, 2 * Math.PI, false)
-            context.fillStyle = Colors.infection_area
-            context.fill()
-        }
-
-        // Name
+    function draw() {
+        var context = canvas.getContext("2d")
+        context.clearRect(0, 0, canvas.width, canvas.height)
+        places.forEach(p => p.draw(context))
+        agents.forEach(a => a.draw(context))
         context.fillStyle = Colors.text
-        context.fillText(agent.name, agent.x, agent.y - Dim.agent_radius)
-    }
-
-    function drawGUI() {
-        // Draw clock
-        context.fillStyle = Colors.text
-        var date_string = (date.getDate()) + "/" +
-            (date.getMonth() + 1) + " " + 
-            date.getHours() + ":" + 
-            date.getMinutes()
-        context.fillText(date_string, canvas.width / 2, canvas.height - 10);
-    }
+        context.fillText(date.toLocaleString(), canvas.width / 2, canvas.height - 10);
+    }    
 }

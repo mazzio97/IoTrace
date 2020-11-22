@@ -1,5 +1,5 @@
 import MedicalStatus from './medic.js'
-import { Colors, Dim, Time } from './view.js'
+import { Colors, Dim, Time } from './constants.js'
 import { generateSeed } from '../iota/generate.js'
 import { MamGate } from '../iota/mam_gate.js'
 
@@ -17,7 +17,7 @@ export default class Agent {
         this.velocity = velocity
         this.selected = false
         this.medical_status = medical_status
-        this.last_notification_date = undefined
+        this.last_writing = undefined
         this.seed = generateSeed()
         this.channel = new MamGate('public', 'https://nodes.devnet.iota.org', this.seed)
     }
@@ -27,19 +27,15 @@ export default class Agent {
         this.target_y = target_y
     }
 
-    notify(date) {
-        if (this.last_notification_date == undefined 
-            || date - this.last_notification_date >= Time.notification) {
-
-            this.last_notification_date = new Date(date)
-            
-            /* await */ this.channel.publish({
-                message: "Message from " + this.name,
-                position: this.x + ", " + this.y,
-                date: this.last_notification_date
-            }).then(async root =>
-                console.log(root)
-            )
+    write(date) {
+        if (this.last_writing == undefined || date - this.last_writing >= Time.writingTime) {
+            this.last_writing = new Date(date)
+            // console.log(this.last_writing)            
+            // this.channel.publish({
+            //     message: "Message from " + this.name,
+            //     position: this.x + ", " + this.y,
+            //     date: this.last_writing
+            // })
         }
     }
 
@@ -56,7 +52,7 @@ export default class Agent {
             this.y = this.y + delta_y * this.velocity / length
         }
 
-        // If quarantined, then says at the home corner
+        // If quarantined, then stays at the home corner
         // Otherwise, when target is reached, new target can be chosen with probability p
         if (this.state == State.QUARANTINED) {
             let c = this.home.corner
@@ -67,6 +63,35 @@ export default class Agent {
                 this.move(place.getRandomX(), place.getRandomY())
             }
         }        
+    }
+
+    draw(context) {
+        // Body
+        context.beginPath()
+        context.arc(this.x, this.y, Dim.agent_radius, 0, 2 * Math.PI, false)
+
+        // Colors depend on the state
+        context.fillStyle = this.state.color
+
+        if (this.selected == true) {
+            context.lineWidth = Dim.selected_stroke_width
+            context.strokeStyle = Colors.selected_stroke
+            context.stroke()
+        }
+
+        context.fill()
+
+        // Infection area
+        if (this.state == State.INFECTED) {
+            context.beginPath()
+            context.arc(this.x, this.y, Dim.infection_radius, 0, 2 * Math.PI, false)
+            context.fillStyle = Colors.infection_area
+            context.fill()
+        }
+
+        // Name
+        context.fillStyle = Colors.text
+        context.fillText(this.name, this.x, this.y - Dim.agent_radius)
     }
 }
 

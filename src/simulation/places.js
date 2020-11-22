@@ -1,3 +1,5 @@
+import { Colors } from './constants.js'
+
 export default class Place {
     constructor(name, x, y, r, corner='None') {
         this.name = name
@@ -27,6 +29,14 @@ export default class Place {
 
     getRandomY() {
         return this.yMin + (this.yMax - this.yMin) * Math.random()
+    }
+
+    draw(context) {
+        context.setLineDash([5, 5])
+        context.strokeStyle = Colors.place_line
+        context.lineWidth = 1
+        context.strokeRect(this.xMin, this.yMin, this.xMax - this.xMin, this.yMax - this.yMin)
+        context.fillText(this.name, this.xMin + 5, this.yMin - 5)
     }
 }
 

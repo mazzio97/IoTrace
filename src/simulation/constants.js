@@ -1,8 +1,7 @@
 const place_alpha_channel = 0.7
 const agent_alpha_channel = 0.7
 const infection_area_alpha_channel = 0.2
-// Time elapsed every loop (in milliseconds)
-export const timestep = 1000.0 / 30.0
+const timestep = 1000.0 / 30.0 // 30fps
 
 export const Colors = {
 	normal: "rgba(0, 0, 0, " + agent_alpha_channel + ")",
@@ -30,10 +29,12 @@ export const Dim = {
 
 export const Time = {
 	// 8.64e+7
-	updateTime: timestep,
-	sickness: 3000 * timestep,
-	visit: 2000 * timestep,
-	notification: 500 * timestep,
+	clock: timestep,
+	clockScale: 60 * timestep, // every second in the simulation corresponds to a minute
+	writingTime: 2 * 60 * 1000, // agents write every five (simulated) minute
+	sickness: 3000 * 3600 * timestep,
+	visit: 2000 * 3600 * timestep,
+	initialDate: new Date(2020, 2) // initial date of the simulation
 }
 
 export default {}
