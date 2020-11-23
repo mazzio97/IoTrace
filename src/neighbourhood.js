@@ -3,8 +3,10 @@ import { Place } from './simulation/places.js'
 import MedicalStatus from './simulation/medic.js'
 import { Colors, Dim, Time } from './simulation/constants.js'
 
-// Time variables
+// Global Variables
 let date = Time.initialDate
+let intervalId = undefined
+let last_writing = new Date(date)
 
 // List of places
 let radius = 80
@@ -19,7 +21,7 @@ let places = new Array(
 )
 
 // List of agents
-let agents = [1, 2, 3, 4, 5].flatMap( idx => [
+let agents = [1].flatMap( idx => [
     new Agent("G" + idx, State.NORMAL, places[0]),
     new Agent("M" + idx, State.NORMAL, places[1]),
     new Agent("L" + idx, State.NORMAL, places[2]),
@@ -27,19 +29,31 @@ let agents = [1, 2, 3, 4, 5].flatMap( idx => [
 ])
 agents[agents.length - 1].state = State.INFECTED
 agents[agents.length - 1].medical_status = new MedicalStatus(new Date(date.getTime()))
-agents = new Array(agents[0], agents[1]) // TODO: remove
 
 // Index of the selected agent
 let agent_selected = undefined
 
 window.onload = () => {
+    var toggle = document.getElementById("toggle")
     var canvas = document.getElementById("scene")
     // Stretch the canvas to the window size
-    canvas.width = Dim.width - 10
-    canvas.height = Dim.height - 10
+    canvas.width = Dim.width - 30
+    canvas.height = Dim.height - 30
     canvas.getContext("2d").font = "10px Arial"
 
-    update()
+    // Canvas initialization
+    draw()
+
+    toggle.addEventListener("click", _ => {
+        if (toggle.innerText == "Play") {
+            toggle.innerText = "Pause"
+            intervalId = setInterval(update, Time.clock)
+        } else {
+            toggle.innerText = "Play"
+            clearInterval(intervalId)
+            intervalId = undefined
+        }
+    })
 
     canvas.addEventListener("click", event => {
         var clicked_x = event.clientX
@@ -74,9 +88,6 @@ window.onload = () => {
     }, false)
 
     function update() {
-        // Function recursively called every clock milliseconds
-        setTimeout(() => window.requestAnimationFrame(update), Time.clock)
-
         tick()
 
         /*
@@ -123,11 +134,10 @@ window.onload = () => {
     }
 
     function tick() {
+        const writeDate = new Date(date)
+        last_writing = writeDate
         agents.forEach(a => a.update(places))
-        agents.forEach(a => {
-            const writeDate = new Date(date)
-            a.write(date)
-        })
+        agents.forEach(a => a.write(writeDate))
         date.setMilliseconds(date.getMilliseconds() + Time.clockScale)
     }
 

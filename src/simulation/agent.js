@@ -3,7 +3,7 @@ import { Colors, Dim, Time } from './constants.js'
 import { generateSeed } from '../iota/generate.js'
 import { MamGate } from '../iota/mam_gate.js'
 
-const newTargetProb = 0.003
+const newTargetProb = 0.8
 
 export default class Agent {
     constructor(name, initial_state, home, medical_status = new MedicalStatus(), velocity=1.0) {
@@ -30,12 +30,11 @@ export default class Agent {
     write(date) {
         if (this.last_writing == undefined || date - this.last_writing >= Time.writingTime) {
             this.last_writing = new Date(date)
-            // console.log(this.last_writing)            
-            // this.channel.publish({
-            //     message: "Message from " + this.name,
-            //     position: this.x + ", " + this.y,
-            //     date: this.last_writing
-            // })
+            this.channel.publish({
+                message: "Message from " + this.name,
+                position: this.x + ", " + this.y,
+                date: this.last_writing
+            })
         }
     }
 

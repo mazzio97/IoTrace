@@ -22,7 +22,7 @@ export const Dim = {
 	agent_radius: 10,
 	infection_radius: 20,
 	selected_stroke_width: 3,
-	offset: 50,
+	offset: 60,
 	width: window.innerWidth,
 	height: window.innerHeight
 }
@@ -31,7 +31,7 @@ export const Time = {
 	// 8.64e+7
 	clock: timestep,
 	clockScale: 60 * timestep, // every second in the simulation corresponds to a minute
-	writingTime: 2 * 60 * 1000, // agents write every five (simulated) minute
+	writingTime: 5 * 60 * 1000, // agents write every five (simulated) minute
 	sickness: 3000 * 3600 * timestep,
 	visit: 2000 * 3600 * timestep,
 	initialDate: new Date(2020, 2) // initial date of the simulation
