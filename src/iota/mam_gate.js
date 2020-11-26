@@ -1,7 +1,4 @@
-import { asciiToTrytes, trytesToAscii } from './converter.js'
-
-const providerName = 'devnet'
-const mamExplorerLink = 'https://utils.iota.org/mam'
+import { asciiToTrytes, trytesToAscii } from '@iota/converter'
 
 export default class MamGate {
 

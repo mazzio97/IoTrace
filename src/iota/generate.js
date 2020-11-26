@@ -1,4 +1,4 @@
-export const generateSeed = function () {
+export const generateSeed = () => {
     // The length of the seed and int array.
     var length = 81
     // The allowed characters in the seed.

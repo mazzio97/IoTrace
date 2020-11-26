@@ -1,5 +1,5 @@
 module.exports = {
-	entry: './src/simulation.js',
+	entry: './src/main.js',
 	mode: 'development',
 	output: {
 	  path: `${__dirname}/dist`,
