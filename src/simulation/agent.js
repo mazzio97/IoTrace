@@ -1,11 +1,10 @@
-import MedicalStatus from './medic.js'
 import { Colors, Dim, Time } from './constants.js'
 import { generateSeed } from '../iota/generate.js'
 import { MamGate } from '../iota/mam_gate.js'
 
-const newTargetProb = 0.8
+const newTargetProb = 1e-3
 
-export default class Agent {
+class Agent {
     constructor(name, initial_state, home, medical_status = new MedicalStatus(), velocity=1.0) {
         this.name = name
         this.state = initial_state
@@ -27,7 +26,7 @@ export default class Agent {
         this.target_y = target_y
     }
 
-    write(date) {
+    writeMessage(date) {
         if (this.last_writing == undefined || date - this.last_writing >= Time.writingTime) {
             this.last_writing = new Date(date)
             this.channel.publish({
@@ -38,7 +37,7 @@ export default class Agent {
         }
     }
 
-    update(places) {
+    updatePosition(places) {
         var delta_x = (this.target_x - this.x)
         var delta_y = (this.target_y - this.y)
         var length = Math.sqrt(delta_x * delta_x + delta_y * delta_y)
@@ -51,9 +50,9 @@ export default class Agent {
             this.y = this.y + delta_y * this.velocity / length
         }
 
-        // If quarantined, then stays at the home corner
+        // If notified or quarantined, then stays at the home corner
         // Otherwise, when target is reached, new target can be chosen with probability p
-        if (this.state == State.QUARANTINED) {
+        if (this.state == State.NOTIFIED || this.state == State.QUARANTINED) {
             let c = this.home.corner
             this.move(c[0], c[1])
         } else if (Math.abs(delta_x) < Dim.epsilon && Math.abs(delta_y) < Dim.epsilon) {
@@ -62,6 +61,20 @@ export default class Agent {
                 this.move(place.getRandomX(), place.getRandomY())
             }
         }        
+    }
+
+    checkInfection(agents, date) {
+        if (this.state == State.NORMAL) {
+            agents.filter(a => a.state == State.INFECTED).forEach(infected => {
+                var dx = infected.x - this.x
+                var dy = infected.y - this.y
+                if(dx * dx + dy * dy <= Dim.infection_radius * Dim.infection_radius) {
+                    this.state = State.INFECTED
+                    this.medical_status.infection_date = date
+                }
+            })
+            return
+        }
     }
 
     draw(context) {
@@ -94,7 +107,14 @@ export default class Agent {
     }
 }
 
-// Model
+class MedicalStatus {
+    constructor(infection_date, notification_date, quarantined_date) {
+        this.infection_date = infection_date
+        this.notification_date = notification_date
+        this.quarantined_date = quarantined_date
+    }
+}
+
 const State = {
     NORMAL: { status: "normal", color: Colors.normal },
     INFECTED: { status: "infected", color: Colors.infected },
@@ -102,4 +122,4 @@ const State = {
     QUARANTINED: { status: "quarantined", color: Colors.quarantined }
 }
 
-export { Agent, State }
+export { Agent, MedicalStatus, State }

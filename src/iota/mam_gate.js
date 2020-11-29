@@ -1,6 +1,6 @@
 import { asciiToTrytes, trytesToAscii } from '@iota/converter'
 
-export default class MamGate {
+class MamGate {
 
 	constructor(mode, provider, seed) {
 		this.mamState = Mam.init(provider, seed)

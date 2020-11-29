@@ -1,12 +1,10 @@
-import { Agent, State } from './simulation/agent.js'
+import { Agent, MedicalStatus, State } from './simulation/agent.js'
 import { Place } from './simulation/places.js'
-import MedicalStatus from './simulation/medic.js'
 import { Colors, Dim, Time } from './simulation/constants.js'
 
 // Global Variables
 let date = Time.initialDate
 let intervalId = undefined
-let last_writing = new Date(date)
 
 // List of places
 let radius = 80
@@ -21,7 +19,7 @@ let places = new Array(
 )
 
 // List of agents
-let agents = [1].flatMap( idx => [
+let agents = [1, 2, 3, 4, 5].flatMap( idx => [
     new Agent("G" + idx, State.NORMAL, places[0]),
     new Agent("M" + idx, State.NORMAL, places[1]),
     new Agent("L" + idx, State.NORMAL, places[2]),
@@ -44,6 +42,7 @@ window.onload = () => {
     // Canvas initialization
     draw()
 
+    // Play/Pause Toggle
     toggle.addEventListener("click", _ => {
         if (toggle.innerText == "Play") {
             toggle.innerText = "Pause"
@@ -55,6 +54,7 @@ window.onload = () => {
         }
     })
 
+    // Click on agent
     canvas.addEventListener("click", event => {
         var clicked_x = event.clientX
         var clicked_y = event.clientY
@@ -94,50 +94,35 @@ window.onload = () => {
          * TODO:
          * LOGIC SHOULD BE MOVED OUTSIDE
          */
-        
-        // Trigger events
-        // Infection (contact with an infected agent)
-        agents.filter(a => {
-            return a.state == State.INFECTED
-        }).forEach(infected => {
-            agents.filter(normal => {
-                return normal.state != State.INFECTED
-            }).forEach(normal => {
-                var dx = infected.x - normal.x
-                var dy = infected.y - normal.y
 
-                if((dx * dx + dy * dy) <= (Dim.infection_radius * Dim.infection_radius)) {
-                    normal.state = State.INFECTED
-                    normal.medical_status.infection_date = new Date(date.getTime())
-                }
-            })
-        })
+        // // Read notification (from the app)
+        // // TODO
 
-        // Read notification (from the app)
-        // TODO
+        // // Quarantine (after 14 days from infection or after 2 days from notification)
+        // agents.filter(a => {
+        //     return a.state == State.INFECTED || a.state == State.NOTIFIED
+        // }).forEach(a => {
+        //     if ((a.medical_status.infection_date != undefined && 
+        //         date - a.medical_status.infection_date > Time.sickness) || 
+        //         (a.medical_status.notification_date != undefined &&
+        //         date - a.medical_status.notification_date > Time.visit)) {
 
-        // Quarantine (after 14 days from infection or after 2 days from notification)
-        agents.filter(a => {
-            return a.state == State.INFECTED || a.state == State.NOTIFIED
-        }).forEach(a => {
-            if ((a.medical_status.infection_date != undefined && 
-                date - a.medical_status.infection_date > Time.sickness) || 
-                (a.medical_status.notification_date != undefined &&
-                date - a.medical_status.notification_date > Time.visit)) {
-
-                a.medical_status.quarantined_date = new Date(date.getTime())
-                a.state = State.QUARANTINED
-            }
-        })
+        //         a.medical_status.quarantined_date = new Date(date.getTime())
+        //         a.state = State.QUARANTINED
+        //     }
+        // })
 
         draw()
     }
 
     function tick() {
-        const writeDate = new Date(date)
-        last_writing = writeDate
-        agents.forEach(a => a.update(places))
-        agents.forEach(a => a.write(writeDate))
+        const writeDate = new Date(date) // used to handle asyncronous writing
+        agents.forEach(a => a.updatePosition(places))
+        agents.forEach(a => a.checkInfection(agents, date))
+        /* 
+         * TODO: AVOID GUI BLOCKING
+         * agents.forEach(a => a.writeMessage(writeDate))
+         */
         date.setMilliseconds(date.getMilliseconds() + Time.clockScale)
     }
 

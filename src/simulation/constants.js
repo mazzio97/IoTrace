@@ -3,7 +3,7 @@ const agent_alpha_channel = 0.7
 const infection_area_alpha_channel = 0.2
 const timestep = 1000.0 / 30.0 // 30fps
 
-export const Colors = {
+const Colors = {
 	normal: "rgba(0, 0, 0, " + agent_alpha_channel + ")",
 	infected: "rgba(255, 0, 0, " + agent_alpha_channel + ")",
 	notified: "rgba(255, 255, 0, " + agent_alpha_channel + ")",
@@ -17,7 +17,7 @@ export const Colors = {
 	place_text: "rgba(0, 0, 0, " + place_alpha_channel + ")"
 }
 
-export const Dim = {
+const Dim = {
 	epsilon: 1, // Minimum distance used to stop agents which have reached their destinations
 	agent_radius: 10,
 	infection_radius: 20,
@@ -27,14 +27,12 @@ export const Dim = {
 	height: window.innerHeight
 }
 
-export const Time = {
+const Time = {
 	// 8.64e+7
 	clock: timestep,
 	clockScale: 60 * timestep, // every second in the simulation corresponds to a minute
 	writingTime: 5 * 60 * 1000, // agents write every five (simulated) minute
-	sickness: 3000 * 3600 * timestep,
-	visit: 2000 * 3600 * timestep,
 	initialDate: new Date(2020, 2) // initial date of the simulation
 }
 
-export default {}
+export {Colors, Dim, Time}

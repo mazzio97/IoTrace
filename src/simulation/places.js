@@ -1,6 +1,6 @@
 import { Colors } from './constants.js'
 
-export default class Place {
+class Place {
     constructor(name, x, y, r, corner='None') {
         this.name = name
         this.xMin = x - r

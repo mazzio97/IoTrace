@@ -1,4 +1,4 @@
-export const generateSeed = () => {
+const generateSeed = () => {
     // The length of the seed and int array.
     var length = 81
     // The allowed characters in the seed.
@@ -24,3 +24,5 @@ export const generateSeed = () => {
     // Merge the array into a single string and return it.
     return result.join('')
 }
+
+export { generateSeed }
