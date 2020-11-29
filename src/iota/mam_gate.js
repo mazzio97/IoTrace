@@ -9,8 +9,6 @@ class MamGate {
 	}
 
 	async publish(packet, verbose=true) {
-		const date = new Date()
-
 		// Create MAM message as a string of trytes
 		const trytes = asciiToTrytes(JSON.stringify(packet))
 		const message = await Mam.create(this.mamState, trytes)

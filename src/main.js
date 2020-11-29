@@ -1,5 +1,5 @@
 import { Agent, MedicalStatus, State } from './simulation/agent.js'
-import { Place } from './simulation/places.js'
+import { Place, CovidCentre } from './simulation/places.js'
 import { Colors, Dim, Time } from './simulation/constants.js'
 
 // Global Variables
@@ -9,24 +9,25 @@ let intervalId = undefined
 // List of places
 let radius = 80
 let places = new Array(
-    new Place('Giuliani\'s', radius + Dim.offset, radius + Dim.offset, radius, 'TopLeft'),
-    new Place('Mazzieri\'s', Dim.width - (radius + Dim.offset), radius + Dim.offset, radius, 'TopRight'),
-    new Place('Lombardi\'s', radius + Dim.offset, Dim.height - (radius + Dim.offset), radius, 'DownLeft'),
-    new Place('SomeoneElse\'s', Dim.width - (radius + Dim.offset), Dim.height - (radius + Dim.offset), radius, 'DownRight'),
-    new Place('Pub', 600, 200, 1.2 * radius),
-    new Place('Mall', 1000, 350, 1.6 * radius),
-    new Place('Campus', 700, 500, 1.4 * radius)
+    new Place('Giuliani\'s', radius + Dim.offset, radius + Dim.offset, radius),
+    new Place('Mazzieri\'s', Dim.width - (radius + Dim.offset), radius + Dim.offset, radius),
+    new Place('Lombardi\'s', radius + Dim.offset, Dim.height - (radius + Dim.offset), radius),
+    new Place('SomeoneElse\'s', Dim.width - (radius + Dim.offset), Dim.height - (radius + Dim.offset), radius),
+    new Place('Pub', 600, 200, radius),
+    new Place('Mall', 1000, 450, 1.4 * radius),
+    new Place('Campus', 550, 500, 1.2 * radius)
 )
+let covidCentre = new CovidCentre(900, 150, 1.2 * radius)
 
 // List of agents
 let agents = [1, 2, 3, 4, 5].flatMap( idx => [
-    new Agent("G" + idx, State.NORMAL, places[0]),
-    new Agent("M" + idx, State.NORMAL, places[1]),
-    new Agent("L" + idx, State.NORMAL, places[2]),
-    new Agent("S" + idx, State.NORMAL, places[3])
+    new Agent("G" + idx, places[0], covidCentre),
+    new Agent("M" + idx, places[1], covidCentre),
+    new Agent("L" + idx, places[2], covidCentre),
+    new Agent("S" + idx, places[3], covidCentre)
 ])
 agents[agents.length - 1].state = State.INFECTED
-agents[agents.length - 1].medical_status = new MedicalStatus(new Date(date.getTime()))
+agents[agents.length - 1].medicalStatus = new MedicalStatus(new Date(date))
 
 // Index of the selected agent
 let agent_selected = undefined
@@ -84,44 +85,22 @@ window.onload = () => {
         }
         if (agent_selected !== undefined) {
             agents[agent_selected].move(clicked_x, clicked_y)
+            agents[agent_selected].selected = false
+            agent_selected = undefined
         }
     }, false)
 
     function update() {
         tick()
-
-        /*
-         * TODO:
-         * LOGIC SHOULD BE MOVED OUTSIDE
-         */
-
-        // // Read notification (from the app)
-        // // TODO
-
-        // // Quarantine (after 14 days from infection or after 2 days from notification)
-        // agents.filter(a => {
-        //     return a.state == State.INFECTED || a.state == State.NOTIFIED
-        // }).forEach(a => {
-        //     if ((a.medical_status.infection_date != undefined && 
-        //         date - a.medical_status.infection_date > Time.sickness) || 
-        //         (a.medical_status.notification_date != undefined &&
-        //         date - a.medical_status.notification_date > Time.visit)) {
-
-        //         a.medical_status.quarantined_date = new Date(date.getTime())
-        //         a.state = State.QUARANTINED
-        //     }
-        // })
-
         draw()
     }
 
     function tick() {
-        const writeDate = new Date(date) // used to handle asyncronous writing
-        agents.forEach(a => a.updatePosition(places))
+        agents.forEach(a => a.updatePosition(places, date))
         agents.forEach(a => a.checkInfection(agents, date))
         /* 
          * TODO: AVOID GUI BLOCKING
-         * agents.forEach(a => a.writeMessage(writeDate))
+         * agents.forEach(a => a.writeMessage(date))
          */
         date.setMilliseconds(date.getMilliseconds() + Time.clockScale)
     }
@@ -129,6 +108,7 @@ window.onload = () => {
     function draw() {
         var context = canvas.getContext("2d")
         context.clearRect(0, 0, canvas.width, canvas.height)
+        covidCentre.draw(context)
         places.forEach(p => p.draw(context))
         agents.forEach(a => a.draw(context))
         context.fillStyle = Colors.text

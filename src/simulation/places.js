@@ -1,26 +1,13 @@
 import { Colors } from './constants.js'
+import { Diagnostician } from './diagnostician.js'
 
 class Place {
-    constructor(name, x, y, r, corner='None') {
+    constructor(name, x, y, r) {
         this.name = name
         this.xMin = x - r
         this.xMax = x + r
         this.yMin = y - r
         this.yMax = y + r
-        switch (corner) {
-            case 'TopLeft':
-                this.corner = [this.xMin - 10, this.yMin - 10]
-                break
-            case 'TopRight':
-                this.corner = [this.xMax + 10, this.yMin - 10]
-                break
-            case 'DownLeft':
-                this.corner = [this.xMin - 10, this.yMax + 10]
-                break
-            case 'DownRight':
-                this.corner = [this.xMax + 10, this.yMax + 10]
-                break
-        }
     }
 
     getRandomX() {
@@ -29,6 +16,10 @@ class Place {
 
     getRandomY() {
         return this.yMin + (this.yMax - this.yMin) * Math.random()
+    }
+
+    checkIn(x, y) {
+        return x >= this.xMin && x <= this.xMax && y >= this.yMin && y <= this.yMax
     }
 
     draw(context) {
@@ -40,4 +31,11 @@ class Place {
     }
 }
 
-export { Place }
+class CovidCentre extends Place {
+    constructor(x, y, r) {
+        super('Covid Centre', x, y, r)
+        this.diagnostician = new Diagnostician()
+    }
+}
+
+export { Place, CovidCentre }

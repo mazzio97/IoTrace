@@ -7,7 +7,7 @@ const Colors = {
 	normal: "rgba(0, 0, 0, " + agent_alpha_channel + ")",
 	infected: "rgba(255, 0, 0, " + agent_alpha_channel + ")",
 	notified: "rgba(255, 255, 0, " + agent_alpha_channel + ")",
-	quarantined: "rgba(0, 255, 0, " + agent_alpha_channel + ")",
+	quarantined: "rgba(100, 0, 135, " + agent_alpha_channel + ")",
 
 	infection_area: "rgba(255, 0, 0, " + infection_area_alpha_channel + ")",
 	selected_stroke: "rgba(255, 0, 255, " + agent_alpha_channel + ")",
@@ -28,10 +28,9 @@ const Dim = {
 }
 
 const Time = {
-	// 8.64e+7
 	clock: timestep,
-	clockScale: 60 * timestep, // every second in the simulation corresponds to a minute
-	writingTime: 5 * 60 * 1000, // agents write every five (simulated) minute
+	clockScale: 10 * 60 * timestep, // every second in the simulation corresponds to ten minutes
+	writingTime: 10 * 60 * 1000, // agents write every ten (simulated) minute
 	initialDate: new Date(2020, 2) // initial date of the simulation
 }
 
