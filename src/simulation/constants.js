@@ -19,19 +19,25 @@ const Colors = {
 
 const Dim = {
 	epsilon: 1, // Minimum distance used to stop agents which have reached their destinations
-	agent_radius: 10,
-	infection_radius: 20,
+	agent_radius: 5,
+	infection_radius: 30,
 	selected_stroke_width: 3,
 	offset: 60,
 	width: window.innerWidth,
 	height: window.innerHeight
 }
 
+const Probabilities = {
+	reachNewTarget: 1e-3,
+	passInfection: 1e-2
+}
+
 const Time = {
 	clock: timestep,
 	clockScale: 10 * 60 * timestep, // every second in the simulation corresponds to ten minutes
 	writingTime: 10 * 60 * 1000, // agents write every ten (simulated) minute
-	initialDate: new Date(2020, 2) // initial date of the simulation
+	initialDate: new Date(2020, 2), // initial date of the simulation
+	agentVelocity: 1.0
 }
 
-export {Colors, Dim, Time}
+export {Colors, Dim, Probabilities, Time}

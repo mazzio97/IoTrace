@@ -1,11 +1,9 @@
-import { Colors, Dim, Time } from './constants.js'
+import { Colors, Dim, Probabilities, Time } from './constants.js'
 import { generateSeed } from '../iota/generate.js'
 import { MamGate } from '../iota/mam_gate.js'
 
-const newTargetProb = 1
-
 class Agent {
-    constructor(name, home, covidCentre, initialState = State.NORMAL, medicalStatus = new MedicalStatus(), velocity=1.0) {
+    constructor(name, home, covidCentre, initialState = State.NORMAL, medicalStatus = new MedicalStatus()) {
         this.name = name
         this.home = home
         this.x = home.getRandomX()
@@ -14,7 +12,6 @@ class Agent {
         this.target_x = undefined
         this.target_y = undefined
         this.state = initialState
-        this.velocity = velocity
         this.medicalStatus = medicalStatus
         this.selected = false
         this.last_writing = undefined
@@ -27,7 +24,8 @@ class Agent {
         this.target_y = target_y
     }
 
-    notify() {
+    readNotification() {
+        // TODO: read notification blockchain
         this.state = State.NOTIFIED
         this.move(this.covidCentre.getRandomX(), this.covidCentre.getRandomY())
     }
@@ -45,8 +43,7 @@ class Agent {
 
     updatePosition(places, date) {
         // If target_x is present, the agent moves towards the target
-        // If any infected agent reaches the covid center, it gets quarantined
-        // Otherwise, if not quarantined, it can choose a new target with newTargetProb probability
+        // Otherwise, if any (not quarantined) agent reaches the covid center, it gets a visit
         if (this.target_x != undefined) {
             var delta_x = (this.target_x - this.x)
             var delta_y = (this.target_y - this.y)
@@ -56,13 +53,15 @@ class Agent {
                 this.target_x = undefined
                 this.target_y = undefined
             } else {
-                this.x = this.x + delta_x * this.velocity / length      
-                this.y = this.y + delta_y * this.velocity / length
+                this.x = this.x + delta_x * Time.agentVelocity / length      
+                this.y = this.y + delta_y * Time.agentVelocity / length
             }
-        } else if ((this.state == State.INFECTED || this.state == State.NOTIFIED) && this.covidCentre.checkIn(this.x, this.y)) {
-            this.state = State.QUARANTINED
-            this.covidCentre.diagnostician.certifyPositive(this, date)
-        } else if (this.state != State.QUARANTINED && Math.random() < newTargetProb) {
+        } else if (this.state != State.QUARANTINED && this.covidCentre.checkIn(this.x, this.y)) {
+            this.covidCentre.diagnostician.visit(this, date)
+        }
+        
+        // Finally, if the agent is still not quarantined, it can choose a new target with given probability
+        if (this.state != State.QUARANTINED && Math.random() < Probabilities.reachNewTarget) {
             let place = places[Math.floor(places.length * Math.random())]
             this.move(place.getRandomX(), place.getRandomY())
         }
@@ -70,14 +69,21 @@ class Agent {
 
     checkInfection(agents, date) {
         if (this.state == State.NORMAL) {
-            agents.filter(a => a.state == State.INFECTED).forEach(infected => {
-                var dx = infected.x - this.x
-                var dy = infected.y - this.y
-                if(dx * dx + dy * dy <= (Dim.infection_radius + Dim.agent_radius) * (Dim.infection_radius + Dim.agent_radius)) {
+            // stores the array of infected agents that are in the infection range
+            let nearbyInfected = agents.filter(a => {
+                var dx = a.x - this.x
+                var dy = a.y - this.y
+                var dm = Dim.infection_radius + Dim.agent_radius // maximal distance
+                return a.state == State.INFECTED && dx * dx + dy * dy <= dm * dm
+            })
+            // for each one of them, there is a certain probability of getting infected
+            for (let i = 0; i < nearbyInfected.length; i++) {
+                if (Math.random() < Probabilities.passInfection) {
                     this.state = State.INFECTED
                     this.medicalStatus.infection_date = new Date(date)
+                    return
                 }
-            })
+            }
         }
     }
 
