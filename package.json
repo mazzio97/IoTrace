@@ -14,6 +14,7 @@
   "license": "ISC",
   "dependencies": {
     "@iota/converter": "^1.0.0-beta.30",
+    "asymmetric-crypto": "^1.0.2",
     "jdbscan": "^1.0.0"
   },
   "devDependencies": {

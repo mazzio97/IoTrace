@@ -40,4 +40,9 @@ const Time = {
 	agentVelocity: 1.0
 }
 
-export {Colors, Dim, Probabilities, Time}
+const Security = {
+	password_length: 1024,
+	password_charset: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+}
+
+export {Colors, Dim, Probabilities, Time, Security}
