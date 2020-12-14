@@ -2,10 +2,11 @@ import { asciiToTrytes, trytesToAscii } from '@iota/converter'
 
 class MamGate {
 
-	constructor(mode, provider, seed) {
+	constructor(mode, provider, seed, tag) {
 		this.mamState = Mam.init(provider, seed)
 		this.mode = mode
 		this.root = undefined
+		this.tag = tag
 	}
 
 	async publish(packet, verbose=true) {
@@ -17,7 +18,7 @@ class MamGate {
 		this.mamState = message.state
 		
 		// Attach the message to the Tangle
-		await Mam.attach(message.payload, message.address, 3, 9)
+		await Mam.attach(message.payload, message.address, 3, 9, this.tag)
 		
 		// Store root of first message
 		if (this.root == undefined) {

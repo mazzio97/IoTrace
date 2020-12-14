@@ -3,7 +3,7 @@ import { generateSeed } from '../iota/generate.js'
 import { MamGate } from '../iota/mam_gate.js'
 
 class Agent {
-    constructor(name, home, covidCentre, initialState = State.NORMAL, medicalStatus = new MedicalStatus()) {
+    constructor(name, home, covidCentre, tag, initialState = State.NORMAL, medicalStatus = new MedicalStatus()) {
         this.name = name
         this.home = home
         this.x = home.getRandomX()
@@ -15,8 +15,7 @@ class Agent {
         this.medicalStatus = medicalStatus
         this.selected = false
         this.last_writing = undefined
-        this.seed = generateSeed()
-        this.channel = new MamGate('public', 'https://nodes.devnet.iota.org', this.seed)
+        this.channel = new MamGate('public', 'https://nodes.devnet.iota.org', generateSeed(), tag)
     }
 
     move(target_x, target_y) {
@@ -34,8 +33,9 @@ class Agent {
         if (this.last_writing == undefined || date - this.last_writing >= Time.writingTime) {
             this.last_writing = new Date(date)
             this.channel.publish({
-                message: "Message from " + this.name,
-                position: this.x + ", " + this.y,
+                message: this.name, // TODO: id
+                x: this.x,
+                y: this.y,
                 date: this.last_writing
             })
         }

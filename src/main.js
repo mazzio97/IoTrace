@@ -19,12 +19,14 @@ let places = new Array(
 )
 let covidCentre = new CovidCentre(900, 150, 1.2 * radius)
 
+const geotag = "GEOPOSIOTRACE"
+
 // List of agents
-let agents = [1, 2, 3, 4, 5].flatMap( idx => [
-    new Agent("G" + idx, places[0], covidCentre),
-    new Agent("M" + idx, places[1], covidCentre),
-    new Agent("L" + idx, places[2], covidCentre),
-    new Agent("S" + idx, places[3], covidCentre)
+let agents = [1, 2].flatMap( idx => [
+    new Agent("G" + idx, places[0], covidCentre, geotag),
+    new Agent("M" + idx, places[1], covidCentre, geotag),
+    new Agent("L" + idx, places[2], covidCentre, geotag),
+    new Agent("S" + idx, places[3], covidCentre, geotag)
 ])
 agents[agents.length - 1].state = State.INFECTED
 agents[agents.length - 1].medicalStatus = new MedicalStatus(new Date(date))
@@ -102,6 +104,7 @@ window.onload = () => {
          * TODO: AVOID GUI BLOCKING
          * agents.forEach(a => a.writeMessage(date))
          */
+        agents.forEach(a => a.writeMessage(date))
         date.setMilliseconds(date.getMilliseconds() + Time.clockScale)
     }
 
