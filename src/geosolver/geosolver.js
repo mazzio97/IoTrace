@@ -1,15 +1,16 @@
-const jDBSCAN = require('jdbscan')
+import * as jDBSCAN from 'jdbscan'
 
-const Iota = require('@iota/core')
-const Mam = require('@iota/mam')
-const { trytesToAscii } = require('@iota/converter')
+import * as Iota from '@iota/core'
+// import Mam from '@iota/mam'
+import { trytesToAscii } from '@iota/converter'
+import { SecurityToolBox } from '../iota/security'
 
 const provider = 'https://nodes.devnet.iota.org'
 const mode = 'public'
 const iota = Iota.composeAPI({ provider: provider })
-Mam.init(provider)
+// Mam.init(provider)
 
-class GeoSolver {
+export class GeoSolver {
 	constructor(distance, timeInterval, people=1) {
 		this.dbscanner = jDBSCAN().eps(distance).minPts(people).distance((point1, point2) => {
             if (Math.abs(point2.timestamp - point1.timestamp) <= timeInterval) {
@@ -17,7 +18,9 @@ class GeoSolver {
             } else {
                 return Number.POSITIVE_INFINITY
 			}
-        })
+		})
+
+		this.security_toolbox = new SecurityToolBox('7KxRgYSISJ7sRUx3pc5hZZ7ptEQ+YPddp6rhC8Y1uUS6FrI7gmApDxI9mqDXFF5jdRJdObU6sXcXxXM5+G3VMQ==')
 	}
 
 	updateInfected() {
@@ -27,9 +30,9 @@ class GeoSolver {
 					const result = await Mam.fetchSingle(root, mode)
 					const json = JSON.parse(trytesToAscii(result.payload))
 					return {
-						x: parseFloat(json.x),
-						y: parseFloat(json.y),
-						timestamp: Date.parse(json.date) / 1000
+						x: parseFloat(this.security_toolbox.decryptMessage(json.x, json.public_key)),
+						y: parseFloat(this.security_toolbox.decryptMessage(json.y, json.public_key)),
+						timestamp: Date.parse(this.security_toolbox.decryptMessage(json.date, json.public_key)) / 1000
 					}
 				}))
 			)
@@ -42,4 +45,5 @@ class GeoSolver {
 	}
 }
 
-new GeoSolver(100, 20).updateInfected()
+// new GeoSolver(100, 20).updateInfected()
+export default {}
