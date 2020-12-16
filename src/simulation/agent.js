@@ -1,6 +1,7 @@
 import { Colors, Dim, Probabilities, Time } from './constants.js'
 import { generateSeed } from '../iota/generate.js'
 import { MamGate } from '../iota/mam_gate.js'
+import { SecurityToolBox } from '../iota/security.js'
 
 class Agent {
     constructor(name, home, covidCentre, tag, initialState = State.NORMAL, medicalStatus = new MedicalStatus()) {
@@ -16,6 +17,8 @@ class Agent {
         this.selected = false
         this.last_writing = undefined
         this.channel = new MamGate('public', 'https://nodes.devnet.iota.org', generateSeed(), tag)
+        this.secutity_toolbox = new SecurityToolBox()
+        this.geosolver_public_key = 'uhayO4JgKQ8SPZqg1xReY3USXTm1OrF3F8VzOfht1TE='
     }
 
     move(target_x, target_y) {
@@ -33,10 +36,15 @@ class Agent {
         if (this.last_writing == undefined || date - this.last_writing >= Time.writingTime) {
             this.last_writing = new Date(date)
             this.channel.publish({
-                message: this.name, // TODO: id
-                x: this.x,
-                y: this.y,
-                date: this.last_writing
+                message: this.secutity_toolbox.encryptMessage(this.name, 
+                    this.secutity_toolbox.keys.publicKey),
+                x: this.secutity_toolbox.encryptMessage(JSON.stringify(this.x), 
+                    this.geosolver_public_key),
+                y: this.secutity_toolbox.encryptMessage(JSON.stringify(this.y), 
+                    this.geosolver_public_key),
+                date: this.secutity_toolbox.encryptMessage(JSON.stringify(this.last_writing), 
+                    this.geosolver_public_key),
+                public_key: this.secutity_toolbox.keys.publicKey
             })
         }
     }

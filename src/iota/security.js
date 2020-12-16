@@ -3,10 +3,13 @@ var crypto = require('asymmetric-crypto')
 
 
 class SecurityToolBox {
-    constructor() {
+    constructor(secretKey="") {
         // this.password = this.generatePassword()
-        this.keys = crypto.keyPair()
-        console.log(this.keys)
+        if (secretKey === "") {
+            this.keys = crypto.keyPair()
+        } else {
+            this.keys = crypto.fromSecretKey(secretKey)
+        }
     }
 
     generatePassword() {

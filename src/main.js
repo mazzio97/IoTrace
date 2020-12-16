@@ -1,6 +1,9 @@
 import { Agent, MedicalStatus, State } from './simulation/agent.js'
 import { Place, CovidCentre } from './simulation/places.js'
 import { Colors, Dim, Time } from './simulation/constants.js'
+import { GeoSolver } from './geosolver/geosolver.js'
+
+new GeoSolver(100, 20).updateInfected()
 
 // Global Variables
 let date = Time.initialDate
