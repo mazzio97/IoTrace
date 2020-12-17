@@ -10,12 +10,12 @@ class Diagnostician{
 
     // if an agent is infected and not yet quarantined it gets quarantined and a message is published on the infected blockchain
     visit(agent, date) {
-        if (agent.state != State.QUARANTINED && agent.medicalStatus.infection_date !== undefined) {
+        if (agent.state != State.QUARANTINED && agent.medicalStatus.infectionDate !== undefined) {
             agent.state = State.QUARANTINED
-            agent.medicalStatus.quarantined_date = new Date(date)
+            agent.medicalStatus.quarantinedDate = new Date(date)
             this.channel.publish({
                 message: agent.name + " infected",
-                date: agent.medicalStatus.quarantined_date
+                date: agent.medicalStatus.quarantinedDate
             })
         }
     }

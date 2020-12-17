@@ -1,9 +1,9 @@
 import { Agent, MedicalStatus, State } from './simulation/agent.js'
 import { Place, CovidCentre } from './simulation/places.js'
 import { Colors, Dim, Time } from './simulation/constants.js'
-import { GeoSolver } from './geosolver/geosolver.js'
+// import { GeoSolver } from './geosolver/geosolver.js'
 
-new GeoSolver(100, 20).updateInfected()
+// new GeoSolver(100, 20).updateInfected()
 
 // Global Variables
 let date = Time.initialDate
@@ -35,11 +35,12 @@ agents[agents.length - 1].state = State.INFECTED
 agents[agents.length - 1].medicalStatus = new MedicalStatus(new Date(date))
 
 // Index of the selected agent
-let agent_selected = undefined
+let agentSelected = undefined
 
 window.onload = () => {
     var toggle = document.getElementById("toggle")
     var canvas = document.getElementById("scene")
+
     // Stretch the canvas to the window size
     canvas.width = Dim.width - 30
     canvas.height = Dim.height - 30
@@ -62,36 +63,36 @@ window.onload = () => {
 
     // Click on agent
     canvas.addEventListener("click", event => {
-        var clicked_x = event.clientX
-        var clicked_y = event.clientY
-        clicked_x -= canvas.offsetLeft
-        clicked_y -= canvas.offsetTop
+        var clickedX = event.clientX
+        var clickedY = event.clientY
+        clickedX -= canvas.offsetLeft
+        clickedY -= canvas.offsetTop
 
         for (var i = 0; i < agents.length; i++) {
-            var dx = clicked_x - agents[i].x
-            var dy = clicked_y - agents[i].y
-            if((dx * dx + dy * dy) <= (Dim.agent_radius * Dim.agent_radius)) {
+            var dx = clickedX - agents[i].x
+            var dy = clickedY - agents[i].y
+            if((dx * dx + dy * dy) <= (Dim.agentRadius * Dim.agentRadius)) {
                 // Deselect the old agent
-                if (agent_selected !== undefined) {
-                    agents[agent_selected].selected = false
+                if (agentSelected !== undefined) {
+                    agents[agentSelected].selected = false
                 }
 
                 // If the clicked agent is a different one select it otherwise complete deselection
-                if (agent_selected != i) {
-                    agent_selected = i
+                if (agentSelected != i) {
+                    agentSelected = i
                     agents[i].selected = true
                 } else {
-                    agent_selected = undefined
+                    agentSelected = undefined
                 }
 
                 // If more agents are there only the first encountered is taken
                 return
             }
         }
-        if (agent_selected !== undefined) {
-            agents[agent_selected].move(clicked_x, clicked_y)
-            agents[agent_selected].selected = false
-            agent_selected = undefined
+        if (agentSelected !== undefined) {
+            agents[agentSelected].move(clickedX, clickedY)
+            agents[agentSelected].selected = false
+            agentSelected = undefined
         }
     }, false)
 

@@ -24,7 +24,7 @@ class Place {
 
     draw(context) {
         context.setLineDash([5, 5])
-        context.strokeStyle = Colors.place_line
+        context.strokeStyle = Colors.placeLine
         context.lineWidth = 1
         context.strokeRect(this.xMin, this.yMin, this.xMax - this.xMin, this.yMax - this.yMin)
         context.fillText(this.name, this.xMin + 5, this.yMin - 5)

@@ -20,7 +20,7 @@ export class GeoSolver {
 			}
 		})
 
-		this.security_toolbox = new SecurityToolBox('7KxRgYSISJ7sRUx3pc5hZZ7ptEQ+YPddp6rhC8Y1uUS6FrI7gmApDxI9mqDXFF5jdRJdObU6sXcXxXM5+G3VMQ==')
+		this.securityToolbox = new SecurityToolBox('7KxRgYSISJ7sRUx3pc5hZZ7ptEQ+YPddp6rhC8Y1uUS6FrI7gmApDxI9mqDXFF5jdRJdObU6sXcXxXM5+G3VMQ==')
 	}
 
 	updateInfected() {
@@ -30,17 +30,17 @@ export class GeoSolver {
 					const result = await Mam.fetchSingle(root, mode)
 					const json = JSON.parse(trytesToAscii(result.payload))
 					return {
-						x: parseFloat(this.security_toolbox.decryptMessage(json.x, json.public_key)),
-						y: parseFloat(this.security_toolbox.decryptMessage(json.y, json.public_key)),
-						timestamp: Date.parse(this.security_toolbox.decryptMessage(json.date, json.public_key)) / 1000
+						x: parseFloat(this.securityToolbox.decryptMessage(json.x, json.publicKey)),
+						y: parseFloat(this.securityToolbox.decryptMessage(json.y, json.publicKey)),
+						timestamp: Date.parse(this.securityToolbox.decryptMessage(json.date, json.publicKey)) / 1000
 					}
 				}))
 			)
 			.then(positions => {
 				console.log(positions)
 				const scan = this.dbscanner.data(positions)
-				var point_assignment_result = scan()
-				console.log(point_assignment_result)
+				var pointAssignmentResult = scan()
+				console.log(pointAssignmentResult)
 			})
 	}
 }

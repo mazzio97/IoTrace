@@ -1,27 +1,27 @@
-const place_alpha_channel = 0.7
-const agent_alpha_channel = 0.7
-const infection_area_alpha_channel = 0.2
+const placeAlphaChannel = 0.7
+const agentAlphaChannel = 0.7
+const infectionAreaAlphaChannel = 0.2
 const timestep = 1000.0 / 30.0 // 30fps
 
 const Colors = {
-	normal: "rgba(0, 0, 0, " + agent_alpha_channel + ")",
-	infected: "rgba(255, 0, 0, " + agent_alpha_channel + ")",
-	notified: "rgba(255, 255, 0, " + agent_alpha_channel + ")",
-	quarantined: "rgba(100, 0, 135, " + agent_alpha_channel + ")",
+	normal: "rgba(0, 0, 0, " + agentAlphaChannel + ")",
+	infected: "rgba(255, 0, 0, " + agentAlphaChannel + ")",
+	notified: "rgba(255, 255, 0, " + agentAlphaChannel + ")",
+	quarantined: "rgba(100, 0, 135, " + agentAlphaChannel + ")",
 
-	infection_area: "rgba(255, 0, 0, " + infection_area_alpha_channel + ")",
-	selected_stroke: "rgba(255, 0, 255, " + agent_alpha_channel + ")",
-	text: "rgba(0, 0, 0, " + agent_alpha_channel + ")",
+	infectionArea: "rgba(255, 0, 0, " + infectionAreaAlphaChannel + ")",
+	selectedStroke: "rgba(255, 0, 255, " + agentAlphaChannel + ")",
+	text: "rgba(0, 0, 0, " + agentAlphaChannel + ")",
 
-	place_line: "rgba(0, 0, 0, 1)",
-	place_text: "rgba(0, 0, 0, " + place_alpha_channel + ")"
+	placeLine: "rgba(0, 0, 0, 1)",
+	placeText: "rgba(0, 0, 0, " + placeAlphaChannel + ")"
 }
 
 const Dim = {
 	epsilon: 1, // Minimum distance used to stop agents which have reached their destinations
-	agent_radius: 5,
-	infection_radius: 30,
-	selected_stroke_width: 3,
+	agentRadius: 5,
+	infectionRadius: 30,
+	selectedStrokeWidth: 3,
 	offset: 60,
 	width: window.innerWidth,
 	height: window.innerHeight
@@ -41,8 +41,8 @@ const Time = {
 }
 
 const Security = {
-	password_length: 1024,
-	password_charset: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	passwordLength: 1024,
+	passwordCharset: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 }
 
 export {Colors, Dim, Probabilities, Time, Security}
