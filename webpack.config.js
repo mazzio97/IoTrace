@@ -1,8 +1,11 @@
 module.exports = {
-	entry: './src/main.js',
+	entry: {
+		main: './src/main.js',
+		worker: './src/iota/worker.js'
+	},
 	mode: 'development',
 	output: {
 	  path: `${__dirname}/dist`,
-	  filename: 'bundle.js',
+	  filename: '[name].bundle.js',
 	}
   };

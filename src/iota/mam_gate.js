@@ -7,9 +7,15 @@ class MamGate {
 		this.mode = mode
 		this.root = undefined
 		this.tag = tag
+		this.iotaWorker = new Worker('./worker.bundle.js')
 	}
 
 	async publish(packet, verbose=true) {
+		this.iotaWorker.postMessage({'type': 'attach',
+			'mamState': this.mamState,
+			'packet': packet,
+			'verbose': verbose})
+		/*
 		// Create MAM message as a string of trytes
 		const trytes = asciiToTrytes(JSON.stringify(packet))
 		const message = await Mam.create(this.mamState, trytes)
@@ -31,6 +37,7 @@ class MamGate {
 		}
 		
 		return this.root
+		*/
 	}
 
 	async read() {
