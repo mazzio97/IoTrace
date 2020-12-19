@@ -9,7 +9,7 @@ const generateSeed = () => {
     var result = new Array(length)
 
     // Generate random values and store them to array.
-    window.crypto.getRandomValues(randomValues)
+    crypto.getRandomValues(randomValues)
 
     // A cursor is introduced to remove modulus bias.
     var cursor = 0

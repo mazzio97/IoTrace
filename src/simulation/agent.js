@@ -1,10 +1,8 @@
 import { Colors, Dim, Probabilities, Time } from './constants.js'
-import { generateSeed } from '../iota/generate.js'
-import { MamGate } from '../iota/mam_gate.js'
 import { SecurityToolBox } from '../iota/security.js'
 
 class Agent {
-    constructor(name, home, covidCentre, tag, initialState = State.NORMAL, medicalStatus = new MedicalStatus()) {
+    constructor(name, home, covidCentre, initialState = State.NORMAL, medicalStatus = new MedicalStatus()) {
         this.name = name
         this.home = home
         this.x = home.getRandomX()
@@ -16,7 +14,6 @@ class Agent {
         this.medicalStatus = medicalStatus
         this.selected = false
         this.lastWriting = undefined
-        this.channel = new MamGate('public', 'https://nodes.devnet.iota.org', generateSeed(), tag)
         this.secutityToolbox = new SecurityToolBox()
         this.geosolverPublicKey = 'uhayO4JgKQ8SPZqg1xReY3USXTm1OrF3F8VzOfht1TE='
     }
@@ -30,23 +27,6 @@ class Agent {
         // TODO: read notification blockchain
         this.state = State.NOTIFIED
         this.move(this.covidCentre.getRandomX(), this.covidCentre.getRandomY())
-    }
-
-    writeMessage(date) {
-        if (this.lastWriting == undefined || date - this.lastWriting >= Time.writingTime) {
-            this.lastWriting = new Date(date)
-            this.channel.publish({
-                message: this.secutityToolbox.encryptMessage(this.name, 
-                    this.secutityToolbox.keys.publicKey),
-                x: this.secutityToolbox.encryptMessage(JSON.stringify(this.x), 
-                    this.geosolverPublicKey),
-                y: this.secutityToolbox.encryptMessage(JSON.stringify(this.y), 
-                    this.geosolverPublicKey),
-                date: this.secutityToolbox.encryptMessage(JSON.stringify(this.lastWriting), 
-                    this.geosolverPublicKey),
-                publicKey: this.secutityToolbox.keys.publicKey
-            })
-        }
     }
 
     updatePosition(places, date) {

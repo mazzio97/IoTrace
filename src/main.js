@@ -1,124 +1,74 @@
-import { Agent, MedicalStatus, State } from './simulation/agent.js'
-import { Place, CovidCentre } from './simulation/places.js'
-import { Colors, Dim, Time } from './simulation/constants.js'
-// import { GeoSolver } from './geosolver/geosolver.js'
+import { generateSeed } from './iota/generate.js'
+import { MamGate } from './iota/mam_gate.js'
+import { Message } from '../src/simulation/constants.js'
 
-// new GeoSolver(100, 20).updateInfected()
-
-// Global Variables
-let date = Time.initialDate
-let intervalId = undefined
-
-// List of places
-let radius = 80
-let places = new Array(
-    new Place('Giuliani\'s', radius + Dim.offset, radius + Dim.offset, radius),
-    new Place('Mazzieri\'s', Dim.width - (radius + Dim.offset), radius + Dim.offset, radius),
-    new Place('Lombardi\'s', radius + Dim.offset, Dim.height - (radius + Dim.offset), radius),
-    new Place('SomeoneElse\'s', Dim.width - (radius + Dim.offset), Dim.height - (radius + Dim.offset), radius),
-    new Place('Pub', 600, 200, radius),
-    new Place('Mall', 1000, 450, 1.4 * radius),
-    new Place('Campus', 550, 500, 1.2 * radius)
-)
-let covidCentre = new CovidCentre(900, 150, 1.2 * radius)
-
+let agentsMamChannels = []
 const geotag = "GEOPOSIOTRACE"
 
-// List of agents
-let agents = [1, 2].flatMap( idx => [
-    new Agent("G" + idx, places[0], covidCentre, geotag),
-    new Agent("M" + idx, places[1], covidCentre, geotag),
-    new Agent("L" + idx, places[2], covidCentre, geotag),
-    new Agent("S" + idx, places[3], covidCentre, geotag)
-])
-agents[agents.length - 1].state = State.INFECTED
-agents[agents.length - 1].medicalStatus = new MedicalStatus(new Date(date))
+function sleepFor( sleepDuration ){
+    var now = new Date().getTime();
+    while(new Date().getTime() < now + sleepDuration){ } 
+}
 
-// Index of the selected agent
-let agentSelected = undefined
+function writeMessage(agentIndex, agent) {
+    agentsMamChannels[agentIndex].publish({
+        message: agent.name,
+        x: JSON.stringify(agent.x),
+        y: JSON.stringify(agent.y),
+        date: agent.lastWriting,
+        publicKey: agent.secutityToolbox.keys.publicKey
+    })
+}
 
 window.onload = () => {
-    var toggle = document.getElementById("toggle")
-    var canvas = document.getElementById("scene")
+    var canvas = document.getElementById('scene')
+    var toggle = document.getElementById('toggle')
 
     // Stretch the canvas to the window size
-    canvas.width = Dim.width - 30
-    canvas.height = Dim.height - 30
-    canvas.getContext("2d").font = "10px Arial"
+    canvas.width = window.innerWidth, - 30
+    canvas.height = window.innerHeight - 30
 
-    // Canvas initialization
-    draw()
+    var worker = new Worker('./webgl_worker.bundle.js')
+    var offscreen = canvas.transferControlToOffscreen()
 
-    // Play/Pause Toggle
-    toggle.addEventListener("click", _ => {
-        if (toggle.innerText == "Play") {
-            toggle.innerText = "Pause"
-            intervalId = setInterval(update, Time.clock)
+    // Start WebGL worker
+    worker.postMessage({message: Message.startWebGLWorker,
+        canvas: offscreen,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        offsetLeft: canvas.offsetLeft,
+        offsetTop: canvas.offsetTop}, [offscreen])    
+
+    // Play/Pause event listener
+    toggle.addEventListener('click', _ => {
+        if (toggle.innerText == 'Play') {
+            toggle.innerText = 'Pause'
+            worker.postMessage({message: Message.pauseResume})
         } else {
-            toggle.innerText = "Play"
-            clearInterval(intervalId)
-            intervalId = undefined
+            toggle.innerText = 'Play'
+            worker.postMessage({message: Message.pauseResume})
         }
     })
 
-    // Click on agent
-    canvas.addEventListener("click", event => {
-        var clickedX = event.clientX
-        var clickedY = event.clientY
-        clickedX -= canvas.offsetLeft
-        clickedY -= canvas.offsetTop
-
-        for (var i = 0; i < agents.length; i++) {
-            var dx = clickedX - agents[i].x
-            var dy = clickedY - agents[i].y
-            if((dx * dx + dy * dy) <= (Dim.agentRadius * Dim.agentRadius)) {
-                // Deselect the old agent
-                if (agentSelected !== undefined) {
-                    agents[agentSelected].selected = false
-                }
-
-                // If the clicked agent is a different one select it otherwise complete deselection
-                if (agentSelected != i) {
-                    agentSelected = i
-                    agents[i].selected = true
-                } else {
-                    agentSelected = undefined
-                }
-
-                // If more agents are there only the first encountered is taken
-                return
-            }
-        }
-        if (agentSelected !== undefined) {
-            agents[agentSelected].move(clickedX, clickedY)
-            agents[agentSelected].selected = false
-            agentSelected = undefined
-        }
+    // Add event listener to select agents
+    canvas.addEventListener("click", event => { 
+        worker.postMessage({message: Message.click, 
+            clientX: event.clientX, 
+            clientY: event.clientY})
     }, false)
+    
+    worker.onmessage = function(event) {
+        console.log(event.data)
 
-    function update() {
-        tick()
-        draw()
+        if (event.data.message == Message.initMamChannels) {
+            for (const i of Array(event.data.agentsNumber).keys()) {
+                agentsMamChannels[i] = new MamGate('public', 
+                    'https://nodes.devnet.iota.org', 
+                    generateSeed(), 
+                    geotag)
+            }
+        } else if (event.data.message == Message.writeOnMam) {
+            writeMessage(event.data.agentIndex, event.data.agent)
+        }
     }
-
-    function tick() {
-        agents.forEach(a => a.updatePosition(places, date))
-        agents.forEach(a => a.checkInfection(agents, date))
-        /* 
-         * TODO: AVOID GUI BLOCKING
-         * agents.forEach(a => a.writeMessage(date))
-         */
-        agents.forEach(a => a.writeMessage(date))
-        date.setMilliseconds(date.getMilliseconds() + Time.clockScale)
-    }
-
-    function draw() {
-        var context = canvas.getContext("2d")
-        context.clearRect(0, 0, canvas.width, canvas.height)
-        covidCentre.draw(context)
-        places.forEach(p => p.draw(context))
-        agents.forEach(a => a.draw(context))
-        context.fillStyle = Colors.text
-        context.fillText(date.toLocaleString(), canvas.width / 2, canvas.height - 10);
-    }    
 }

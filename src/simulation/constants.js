@@ -22,9 +22,7 @@ const Dim = {
 	agentRadius: 5,
 	infectionRadius: 30,
 	selectedStrokeWidth: 3,
-	offset: 60,
-	width: window.innerWidth,
-	height: window.innerHeight
+	offset: 60
 }
 
 const Probabilities = {
@@ -35,9 +33,9 @@ const Probabilities = {
 const Time = {
 	clock: timestep,
 	clockScale: 10 * 60 * timestep, // every second in the simulation corresponds to ten minutes
-	writingTime: 10 * 60 * 1000, // agents write every ten (simulated) minute
+	writingTime: 10 * 180 * 1000, // agents write every ten (simulated) minute
 	initialDate: new Date(2020, 2), // initial date of the simulation
-	agentVelocity: 1.0
+	agentVelocity: 0.5
 }
 
 const Security = {
@@ -45,4 +43,12 @@ const Security = {
 	passwordCharset: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 }
 
-export {Colors, Dim, Probabilities, Time, Security}
+const Message = {
+	click: 'click',
+	pauseResume: 'pauseResume',
+	startWebGLWorker: 'startWebGLWorker',
+	initMamChannels: 'initMamChannels',
+	writeOnMam: 'writeOnMam',
+}
+
+export {Colors, Dim, Probabilities, Time, Security, Message}
