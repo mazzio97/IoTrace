@@ -5,20 +5,9 @@ import { Message } from '../src/simulation/constants.js'
 let agentsMamChannels = []
 const geotag = "GEOPOSIOTRACE"
 
-function sleepFor( sleepDuration ){
-    var now = new Date().getTime();
-    while(new Date().getTime() < now + sleepDuration){ } 
-}
-
-function writeMessage(agentIndex, agent) {
-    agentsMamChannels[agentIndex].publish({
-        message: agent.name,
-        x: JSON.stringify(agent.x),
-        y: JSON.stringify(agent.y),
-        date: agent.lastWriting,
-        publicKey: agent.secutityToolbox.keys.publicKey
-    })
-}
+let diagnosticianMamChannel = new MamGate('public', 
+    'https://nodes.devnet.iota.org', 
+    generateSeed())
 
 window.onload = () => {
     var canvas = document.getElementById('scene')
@@ -57,18 +46,32 @@ window.onload = () => {
             clientY: event.clientY})
     }, false)
     
+    // Main thread message handlers
     worker.onmessage = function(event) {
         console.log(event.data)
 
         if (event.data.message == Message.initMamChannels) {
+            // Agents' mam channels initialization
             for (const i of Array(event.data.agentsNumber).keys()) {
                 agentsMamChannels[i] = new MamGate('public', 
                     'https://nodes.devnet.iota.org', 
                     generateSeed(), 
                     geotag)
             }
-        } else if (event.data.message == Message.writeOnMam) {
-            writeMessage(event.data.agentIndex, event.data.agent)
+        } else if (event.data.message == Message.agentWriteOnMam) {
+            // Agent writing on Mam
+            agentsMamChannels[event.data.agentIndex].publish({
+                message: event.data.agent.name,
+                x: JSON.stringify(event.data.agent.x),
+                y: JSON.stringify(event.data.agent.y),
+                date: event.data.agent.lastWriting,
+                publicKey: event.data.agent.secutityToolbox.keys.publicKey
+            })
+        } else if (event.data.message == Message.diagnosticianWriteOnMam) {
+            // Diagnostician writing on Mam
+            diagnosticianMamChannel.publish({message: event.data.agent.name + " infected",
+                date: event.data.agent.medicalStatus.quarantinedDate
+            })
         }
     }
 }

@@ -19,9 +19,11 @@ var canvasOffsetTop = undefined
 var agents = undefined
 
 onmessage = function(event) {
-    if (event.data.message == 'pauseResume') {
+    if (event.data.message == Message.pauseResume) {
+        // Pause/Resume button handler
         pause = !pause
-    } else if (event.data.message == 'click') {
+    } else if (event.data.message == Message.click) {
+        // Mouse click on canvas handler
         var clickedX = event.data.clientX
         var clickedY = event.data.clientY
         clickedX -= canvasOffsetLeft
@@ -55,6 +57,7 @@ onmessage = function(event) {
             agentSelected = undefined
         }
     } else {
+        // Worker initialization
         // List of places
         let radius = 80
         let places = new Array(
@@ -90,6 +93,14 @@ onmessage = function(event) {
         var tick = function() {
             // Update simulation
             agents.forEach(a => a.updatePosition(places, date))
+
+            // Diagnosticians writing on Mam
+            while(covidCentre.diagnostician.visitors.length > 0) {
+                postMessage({message: Message.diagnosticianWriteOnMam,
+                    agent: covidCentre.diagnostician.visitors.pop()})
+            }
+
+            // Update infection simulation
             agents.forEach(a => a.checkInfection(agents, date))
 
             // Agents writing on Mam
@@ -97,7 +108,7 @@ onmessage = function(event) {
                 if (a.lastWriting == undefined || date - a.lastWriting >= Time.writingTime) {
                     a.lastWriting = new Date(date)
 
-                    postMessage({message: Message.writeOnMam,
+                    postMessage({message: Message.agentWriteOnMam,
                         agentIndex: i,
                         agent: a})
                 }
@@ -129,6 +140,7 @@ onmessage = function(event) {
             agentsNumber: agents.length})
 
         // Start the rendering loop
+        draw()
         requestAnimationFrame(render)
     }
 }

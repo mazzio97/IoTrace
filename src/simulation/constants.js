@@ -33,7 +33,7 @@ const Probabilities = {
 const Time = {
 	clock: timestep,
 	clockScale: 10 * 60 * timestep, // every second in the simulation corresponds to ten minutes
-	writingTime: 10 * 180 * 1000, // agents write every ten (simulated) minute
+	writingTime: 10 * 600 * 1000, // agents write every ten (simulated) minute
 	initialDate: new Date(2020, 2), // initial date of the simulation
 	agentVelocity: 0.5
 }
@@ -48,7 +48,8 @@ const Message = {
 	pauseResume: 'pauseResume',
 	startWebGLWorker: 'startWebGLWorker',
 	initMamChannels: 'initMamChannels',
-	writeOnMam: 'writeOnMam',
+	agentWriteOnMam: 'agentWriteOnMam',
+	diagnosticianWriteOnMam: 'diagnosticianWriteOnMam'
 }
 
 export {Colors, Dim, Probabilities, Time, Security, Message}
