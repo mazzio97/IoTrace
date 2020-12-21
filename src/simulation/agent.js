@@ -7,6 +7,7 @@ class Agent {
         this.home = home
         this.x = home.getRandomX()
         this.y = home.getRandomY()
+        this.history = [] // the positions not already saved in the Tangle
         this.covidCentre = covidCentre
         this.targetX = undefined
         this.targetY = undefined
@@ -16,6 +17,7 @@ class Agent {
         this.lastWriting = undefined
         this.secutityToolbox = new SecurityToolBox()
         this.geosolverPublicKey = 'uhayO4JgKQ8SPZqg1xReY3USXTm1OrF3F8VzOfht1TE='
+        this.needsToPublish = false
     }
 
     move(targetX, targetY) {
@@ -53,6 +55,17 @@ class Agent {
             let place = places[Math.floor(places.length * Math.random())]
             this.move(place.getRandomX(), place.getRandomY())
         }
+
+        this.needsToPublish = this.history.length > 5
+    }
+
+    updateHistory() {
+        console.log(this.name + ": " + this.x + ", " + this.y + " " + this.lastWriting)
+        this.history.push({x: this.x, y: this.y, date: this.lastWriting})
+    }
+
+    clearHistory() {
+        this.history = []
     }
 
     checkInfection(agents, date) {

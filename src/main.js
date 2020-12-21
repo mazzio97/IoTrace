@@ -3,7 +3,7 @@ import { MamGate } from './iota/mam_gate.js'
 import { Message } from '../src/simulation/constants.js'
 
 let agentsMamChannels = []
-const geotag = "GEOPOSIOTRACE"
+const geotag = "IOTRACEHISTORY"
 
 let diagnosticianMamChannel = new MamGate('public', 
     'https://nodes.devnet.iota.org', 
@@ -62,9 +62,7 @@ window.onload = () => {
             // Agent writing on Mam
             agentsMamChannels[event.data.agentIndex].publish({
                 message: event.data.agent.name,
-                x: JSON.stringify(event.data.agent.x),
-                y: JSON.stringify(event.data.agent.y),
-                date: event.data.agent.lastWriting,
+                history: event.data.agent.history,
                 publicKey: event.data.agent.secutityToolbox.keys.publicKey
             })
         } else if (event.data.message == Message.diagnosticianWriteOnMam) {
