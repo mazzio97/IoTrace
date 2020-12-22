@@ -1,13 +1,16 @@
 import { generateSeed } from './iota/generate.js'
 import { MamGate } from './iota/mam_gate.js'
-import { Message } from '../src/simulation/constants.js'
+import { Message, Security } from '../src/simulation/constants.js'
+import { SecurityToolBox } from './iota/security.js'
 
 let agentsMamChannels = []
+let agentsSecurityTools = []
 const geotag = "IOTRACEHISTORY"
 
 let diagnosticianMamChannel = new MamGate('public', 
     'https://nodes.devnet.iota.org', 
     generateSeed())
+let diagnosticianSecurtiyTools = new SecurityToolBox()
 
 window.onload = () => {
     var canvas = document.getElementById('scene')
@@ -57,18 +60,30 @@ window.onload = () => {
                     'https://nodes.devnet.iota.org', 
                     generateSeed(), 
                     geotag)
+                agentsSecurityTools[i] = new SecurityToolBox()
             }
         } else if (event.data.message == Message.agentWriteOnMam) {
             // Agent writing on Mam
             agentsMamChannels[event.data.agentIndex].publish({
-                message: event.data.agent.name,
-                history: event.data.agent.history,
-                publicKey: event.data.agent.secutityToolbox.keys.publicKey
+                message: agentsSecurityTools[event.data.agentIndex].encryptMessage(event.data.agent.name, 
+                    agentsSecurityTools[event.data.agentIndex].keys.publicKey),                
+                history: agentsSecurityTools[event.data.agentIndex].encryptMessage(JSON.stringify(event.data.agent.history),
+                    Security.geosolverPublicKey),
+                agentPublicKey: agentsSecurityTools[event.data.agentIndex].keys.publicKey
             })
         } else if (event.data.message == Message.diagnosticianWriteOnMam) {
             // Diagnostician writing on Mam
-            diagnosticianMamChannel.publish({message: event.data.agent.name + " infected",
-                date: event.data.agent.medicalStatus.quarantinedDate
+
+            var dateCypher = diagnosticianSecurtiyTools.encryptMessage(JSON.stringify(event.data.agent.medicalStatus.quarantinedDate), 
+                diagnosticianSecurtiyTools.keys.publicKey)
+
+            diagnosticianMamChannel.publish({
+                message: agentsSecurityTools[event.data.agentIndex].encryptMessage(event.data.agent.name, 
+                    agentsSecurityTools[event.data.agentIndex].keys.publicKey),
+                date: dateCypher,
+                signature: diagnosticianSecurtiyTools.signMessage(dateCypher),
+                agentPublicKey: agentsSecurityTools[event.data.agentIndex].keys.publicKey,
+                diagnosticianPublicKey: diagnosticianSecurtiyTools.keys.publicKey
             })
         }
     }
