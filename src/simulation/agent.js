@@ -18,6 +18,8 @@ class Agent {
         this.secutityToolbox = new SecurityToolBox()
         this.geosolverPublicKey = 'uhayO4JgKQ8SPZqg1xReY3USXTm1OrF3F8VzOfht1TE='
         this.needsToPublish = false
+        this.localDim = 5 // Math.floor(Math.random() * 6) + 1
+        this.randomDelay = Math.random() * 10000
     }
 
     move(targetX, targetY) {
@@ -56,11 +58,13 @@ class Agent {
             this.move(place.getRandomX(), place.getRandomY())
         }
 
-        this.needsToPublish = this.history.length > 5
+        this.needsToPublish = this.history.length > this.localDim
     }
 
     updateHistory() {
-        console.log(this.name + ": " + this.x + ", " + this.y + " " + this.lastWriting)
+        if (this.name == "G1") {
+            console.log(this.name + ": " + this.x + ", " + this.y + " " + this.lastWriting)
+        }
         this.history.push({x: this.x, y: this.y, date: this.lastWriting})
     }
 

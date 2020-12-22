@@ -73,7 +73,7 @@ onmessage = function(event) {
         var covidCentre = new CovidCentre(900, 150, 1.2 * radius)
 
         // List of agents
-        agents = [1, 2, 3].flatMap( idx => [
+        agents = [1, 2, 3, 4, 5].flatMap( idx => [
             new Agent("G" + idx, places[0], covidCentre),
             new Agent("M" + idx, places[1], covidCentre),
             new Agent("L" + idx, places[2], covidCentre),
@@ -105,7 +105,7 @@ onmessage = function(event) {
 
             // Agents writing on Mam
             agents.forEach((a, i) => {
-                if ((a.lastWriting == undefined || date - a.lastWriting >= Time.writingTime)) {
+                if ((a.lastWriting == undefined || date - a.lastWriting >= Time.writingTime + a.randomDelay)) {
                     a.lastWriting = new Date(date)
                     
                     a.updateHistory()
@@ -114,7 +114,6 @@ onmessage = function(event) {
                         postMessage({message: Message.agentWriteOnMam,
                             agentIndex: i,
                             agent: a})
-
                         a.clearHistory()
                     }
                 }
