@@ -1,4 +1,5 @@
 import { Colors, Dim, Probabilities, Time } from './constants.js'
+import { SecurityToolBox } from '../iota/security'
 
 class Agent {
     constructor(name, home, covidCentre, initialState = State.NORMAL, medicalStatus = new MedicalStatus()) {

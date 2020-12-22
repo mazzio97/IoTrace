@@ -1,8 +1,8 @@
 {
-  "name": "tracy",
+  "name": "iotrace",
   "version": "1.0.0",
   "description": "A contact tracing app in IOTA",
-  "main": "index.js",
+  "main": "src/main.js",
   "scripts": {
     "watch": "webpack --watch"
   },
@@ -16,8 +16,19 @@
     "@iota/converter": "^1.0.0-beta.30",
     "@iota/core": "^1.0.0-beta.30",
     "@iota/mam": "^0.7.3",
+    "assert": "^2.0.0",
     "asymmetric-crypto": "^1.0.2",
-    "jdbscan": "^1.0.0"
+    "browserify-zlib": "^0.2.0",
+    "buffer": "^6.0.3",
+    "crypto-browserify": "^3.12.0",
+    "encoding": "^0.1.13",
+    "https-browserify": "^1.0.0",
+    "jdbscan": "^1.0.0",
+    "path-browserify": "^1.0.1",
+    "stream-browserify": "^3.0.0",
+    "stream-http": "^3.1.1",
+    "url": "^0.11.0",
+    "util": "^0.12.3"
   },
   "devDependencies": {
     "webpack": "^5.7.0",

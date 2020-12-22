@@ -1,6 +1,6 @@
 import { State } from './agent.js'
 
-class Diagnostician{
+class Diagnostician {
 
     // if an agent is infected and not yet quarantined it gets quarantined and the agent is asked to publish on the infected blockchain
     visit(agent, date) {

@@ -1,5 +1,4 @@
 import { asciiToTrytes, trytesToAscii } from '@iota/converter'
-
 class MamGate {
 
 	constructor(mode, provider, seed, tag) {

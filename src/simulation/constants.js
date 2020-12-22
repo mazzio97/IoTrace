@@ -32,8 +32,8 @@ const Probabilities = {
 
 const Time = {
 	clock: timestep,
-	clockScale: 10 * 60 * timestep, // every second in the simulation corresponds to ten minutes
-	writingTime: 10 * 600 * 1000, // agents write every ten (simulated) minute
+	clockScale: 1 * 60 * timestep, // every second in the simulation corresponds to ten minutes
+	writingTime: 10 * 60 * 1000, // agents write every ten (simulated) minutes
 	initialDate: new Date(2020, 2), // initial date of the simulation
 	agentVelocity: 0.5
 }
