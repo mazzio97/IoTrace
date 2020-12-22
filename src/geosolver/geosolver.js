@@ -4,6 +4,7 @@ import * as Iota from '@iota/core'
 // import Mam from '@iota/mam'
 import { trytesToAscii } from '@iota/converter'
 import { SecurityToolBox } from '../iota/security'
+import { Security } from '../simulation/constants'
 
 const provider = 'https://nodes.devnet.iota.org'
 const mode = 'public'
@@ -20,7 +21,7 @@ export class GeoSolver {
 			}
 		})
 
-		this.securityToolbox = new SecurityToolBox('7KxRgYSISJ7sRUx3pc5hZZ7ptEQ+YPddp6rhC8Y1uUS6FrI7gmApDxI9mqDXFF5jdRJdObU6sXcXxXM5+G3VMQ==')
+		this.securityToolbox = new SecurityToolBox(Security.geosolverPrivatekey)
 	}
 
 	updateInfected() {

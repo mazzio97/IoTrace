@@ -40,7 +40,9 @@ const Time = {
 
 const Security = {
 	passwordLength: 1024,
-	passwordCharset: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	passwordCharset: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+	geosolverPrivatekey: '7KxRgYSISJ7sRUx3pc5hZZ7ptEQ+YPddp6rhC8Y1uUS6FrI7gmApDxI9mqDXFF5jdRJdObU6sXcXxXM5+G3VMQ==',
+	geosolverPublicKey: 'uhayO4JgKQ8SPZqg1xReY3USXTm1OrF3F8VzOfht1TE='
 }
 
 const Message = {

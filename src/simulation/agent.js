@@ -1,18 +1,24 @@
 import { Colors, Dim, Probabilities, Time } from './constants.js'
-import { SecurityToolBox } from '../iota/security.js'
 
 class Agent {
     constructor(name, home, covidCentre, initialState = State.NORMAL, medicalStatus = new MedicalStatus()) {
         this.name = name
+        // Location info
         this.home = home
         this.x = home.getRandomX()
         this.y = home.getRandomY()
-        this.history = [] // the positions not already saved in the Tangle
-        this.covidCentre = covidCentre
         this.targetX = undefined
         this.targetY = undefined
+        this.covidCentre = covidCentre
+         // Positions not already saved in the Tangle
+        this.history = []
+        // Tangle related info
+        this.lastWriting = undefined
+        this.needsToPublish = false
+        // State
         this.state = initialState
         this.medicalStatus = medicalStatus
+        // GUI
         this.selected = false
         this.lastWriting = undefined
         this.secutityToolbox = new SecurityToolBox()
@@ -127,6 +133,8 @@ class MedicalStatus {
         this.infectionDate = infectionDate
         this.notificationDate = notificationDate
         this.quarantinedDate = quarantinedDate
+        // If true the agent is ready to share his information on the blockchain
+        this.waitMedicalUpdate = false
     }
 }
 

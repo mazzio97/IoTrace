@@ -95,10 +95,12 @@ onmessage = function(event) {
             agents.forEach(a => a.updatePosition(places, date))
 
             // Diagnosticians writing on Mam
-            while(covidCentre.diagnostician.visitors.length > 0) {
+            agents.map((a, i) => [i, a]).filter(a => a[1].medicalStatus.waitMedicalUpdate).forEach(a => {
                 postMessage({message: Message.diagnosticianWriteOnMam,
-                    agent: covidCentre.diagnostician.visitors.pop()})
-            }
+                    agentIndex: a[0],
+                    agent: a[1]})
+                a[1].medicalStatus.waitMedicalUpdate = false
+            })
 
             // Update infection simulation
             agents.forEach(a => a.checkInfection(agents, date))
