@@ -2,25 +2,22 @@ import { generateSeed } from './iota/generate.js'
 import { MamGate } from './iota/mam_gate.js'
 import { Message, Security } from '../src/simulation/constants.js'
 import { SecurityToolBox } from './iota/security.js'
+import { Seed, MamSettings } from './simulation/constants'
 
-let agentsMamChannels = []
-let agentsSecurityTools = []
-const geotag = "IOTRACEHISTORY"
-
-let diagnosticianMamChannel = new MamGate('public', 
-    'https://nodes.devnet.iota.org', 
-    generateSeed())
-let diagnosticianSecurtiyTools = new SecurityToolBox()
+let agentsChannels = []
+let diagnostChannels = []
 
 window.onload = () => {
     var canvas = document.getElementById('scene')
     var toggle = document.getElementById('toggle')
+    var solver = document.getElementById('solver')
 
     // Stretch the canvas to the window size
     canvas.width = window.innerWidth, - 30
     canvas.height = window.innerHeight - 30
 
     var worker = new Worker('./webgl_worker.bundle.js')
+    var geosolver = new Worker('./geosolver.bundle.js')
     var offscreen = canvas.transferControlToOffscreen()
 
     // Start WebGL worker
@@ -33,21 +30,27 @@ window.onload = () => {
 
     // Play/Pause event listener
     toggle.addEventListener('click', _ => {
-        if (toggle.innerText == 'Play') {
-            toggle.innerText = 'Pause'
+        if (toggle.innerText == 'Pause') {
+            toggle.innerText = 'Play'
             worker.postMessage({message: Message.pauseResume})
         } else {
-            toggle.innerText = 'Play'
+            toggle.innerText = 'Pause'
             worker.postMessage({message: Message.pauseResume})
         }
     })
 
     // Add event listener to select agents
-    canvas.addEventListener("click", event => { 
+    canvas.addEventListener('click', event => { 
         worker.postMessage({message: Message.click, 
             clientX: event.clientX, 
             clientY: event.clientY})
     }, false)
+
+    solver.addEventListener('click', _ => {
+        geosolver.postMessage({
+            message: Message.calculatePossibleInfections
+        })
+    })
     
     // Main thread message handlers
     worker.onmessage = function(event) {
@@ -56,35 +59,53 @@ window.onload = () => {
         if (event.data.message == Message.initMamChannels) {
             // Agents' mam channels initialization
             for (const i of Array(event.data.agentsNumber).keys()) {
-                agentsMamChannels[i] = new MamGate('public', 
-                    'https://nodes.devnet.iota.org', 
-                    generateSeed(), 
-                    geotag)
-                agentsSecurityTools[i] = new SecurityToolBox()
+                agentsChannels.push({
+                    mam: new MamGate(
+                        MamSettings.provider, MamSettings.mode
+                    ),
+                    security: new SecurityToolBox()
+                })
             }
+            for (const i of Array(event.data.diagnostNumber).keys()) {
+                diagnostChannels.push({
+                    mam: new MamGate(
+                        MamSettings.provider, MamSettings.mode
+                    ),
+                    security: new SecurityToolBox()
+                })
+            }
+            geosolver.postMessage({
+                message: "initAgentsChannels",
+                channels: agentsChannels.map(c => c.mam.copy())
+            })
         } else if (event.data.message == Message.agentWriteOnMam) {
             // Agent writing on Mam
-            agentsMamChannels[event.data.agentIndex].publish({
-                message: agentsSecurityTools[event.data.agentIndex].encryptMessage(event.data.agent.name, 
-                    agentsSecurityTools[event.data.agentIndex].keys.publicKey),                
-                history: agentsSecurityTools[event.data.agentIndex].encryptMessage(JSON.stringify(event.data.agent.history),
+            agentsChannels[event.data.agentIndex].mam.publish({
+                message: agentsChannels[event.data.agentIndex].security.encryptMessage(event.data.agent.name, 
+                    agentsChannels[event.data.agentIndex].security.keys.publicKey),                
+                history: agentsChannels[event.data.agentIndex].security.encryptMessage(JSON.stringify(event.data.agent.history),
                     Security.geosolverPublicKey),
-                agentPublicKey: agentsSecurityTools[event.data.agentIndex].keys.publicKey
+                agentPublicKey: agentsChannels[event.data.agentIndex].security.keys.publicKey
             })
         } else if (event.data.message == Message.diagnosticianWriteOnMam) {
-            // Diagnostician writing on Mam
+            // Diagnosticians writing on Mam
+            var dateCypher = diagnostChannels[0].security.encryptMessage(JSON.stringify(event.data.agent.medicalStatus.quarantinedDate), 
+                    diagnostChannels[0].security.keys.publicKey)
 
-            var dateCypher = diagnosticianSecurtiyTools.encryptMessage(JSON.stringify(event.data.agent.medicalStatus.quarantinedDate), 
-                diagnosticianSecurtiyTools.keys.publicKey)
-
-            diagnosticianMamChannel.publish({
-                message: agentsSecurityTools[event.data.agentIndex].encryptMessage(event.data.agent.name, 
-                    agentsSecurityTools[event.data.agentIndex].keys.publicKey),
+            diagnostChannels[0].mam.publish({
+                message: agentsChannels[event.data.agentIndex].security.encryptMessage(event.data.agent.name, 
+                    agentsChannels[event.data.agentIndex].security.keys.publicKey),
                 date: dateCypher,
-                signature: diagnosticianSecurtiyTools.signMessage(dateCypher),
-                agentPublicKey: agentsSecurityTools[event.data.agentIndex].keys.publicKey,
-                diagnosticianPublicKey: diagnosticianSecurtiyTools.keys.publicKey
+                signature: diagnostChannels[0].security.signMessage(dateCypher),
+                agentPublicKey: agentsChannels[event.data.agentIndex].security.keys.publicKey,
+                diagnosticianPublicKey: diagnostChannels[0].security.keys.publicKey
             })
+        }
+    }
+
+    geosolver.onmessage = event => {
+        if (event.data.message == Message.triggerAgents) {
+            console.log("Notifications")
         }
     }
 }

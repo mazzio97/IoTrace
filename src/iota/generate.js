@@ -1,28 +1,17 @@
-const generateSeed = () => {
-    // The length of the seed and int array.
-    var length = 81
-    // The allowed characters in the seed.
-    var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ9"
-    // An empty array to store the random values.
-    var randomValues = new Uint32Array(length)
-    // An empty array to store the seed characters.
-    var result = new Array(length)
+import * as seedrandom from 'seedrandom'
 
-    // Generate random values and store them to array.
-    crypto.getRandomValues(randomValues)
+const generateSeed = key => {
+    const rng = seedrandom(key)
+    const iotaSeedLength = 81
+    const seedCharset = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ9'
+    let result = ''
 
-    // A cursor is introduced to remove modulus bias.
-    var cursor = 0
-    // Loop through each of the 81 random values.
-    for (var i = 0; i < randomValues.length; i++) {
-        // Add them to the cursor.
-        cursor += randomValues[i]
-        // Assign a new character to the seed based on cursor mod 81.
-        result[i] = chars[cursor % chars.length]
+    for (let i = 0; i < iotaSeedLength; i++) {
+      const x = Math.round(rng() * seedCharset.length) % seedCharset.length
+      result += seedCharset[x]
     }
 
-    // Merge the array into a single string and return it.
-    return result.join('')
+    return result
 }
 
 export { generateSeed }

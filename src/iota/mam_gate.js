@@ -1,14 +1,18 @@
 import { asciiToTrytes, trytesToAscii } from '@iota/converter'
+import * as Mam from '@iota/mam'
+
 class MamGate {
 
-	constructor(mode, provider, seed, tag) {
+	constructor(provider, mode, seed, tag) {
+		this.provider = provider
+		this.seed = seed
 		this.mamState = Mam.init(provider, seed)
 		this.mode = mode
-		this.root = undefined
+		this.root = Mam.getRoot(this.mamState)
 		this.tag = tag
 	}
 
-	async publish(packet, verbose=true) {
+	async publish(packet, verbose=false) {
 		// Create MAM message as a string of trytes
 		const trytes = asciiToTrytes(JSON.stringify(packet))
 		const message = await Mam.create(this.mamState, trytes)
@@ -19,23 +23,26 @@ class MamGate {
 		// Attach the message to the Tangle
 		await Mam.attach(message.payload, message.address, 3, 9, this.tag)
 		
-		// Store root of first message
-		if (this.root == undefined) {
-			this.root = message.root
-		}
-		
+		const address = message.root
+
 		// Prints mam root and published packet
 		if (verbose) {
-			console.log('Published @ ' + this.root + ':', packet)
+			console.log('Published @ ' + address + ':', packet)
 		}
 		
-		return this.root
+		this.read()
+
+		return address
 	}
 
 	async read() {
 		// Output synchronously once fetch is completed
 		const result = await Mam.fetch(this.root, this.mode)
 		result.messages.forEach(message => console.log('Fetched and parsed', JSON.parse(trytesToAscii(message)), '\n'))
+	}
+
+	copy() {
+		return new MamGate(this.provider, this.mode, this.seed, this.tag)
 	}
 }
 

@@ -6,7 +6,7 @@ import { Time, Colors, Dim, Message } from './constants.js'
 let date = Time.initialDate
 
 // Puase/Resume flag
-var pause = false
+var pause = true
 // Index of the selected agent
 var agentSelected = undefined
 
@@ -70,14 +70,16 @@ onmessage = function(event) {
             new Place('Campus', 550, 500, 1.2 * radius)
         )
 
-        var covidCentre = new CovidCentre(900, 150, 1.2 * radius)
+        var covidCentres = new Array(
+            new CovidCentre(900, 150, 1.2 * radius)
+        )
 
         // List of agents
-        agents = [1, 2, 3, 4, 5].flatMap( idx => [
-            new Agent("G" + idx, places[0], covidCentre),
-            new Agent("M" + idx, places[1], covidCentre),
-            new Agent("L" + idx, places[2], covidCentre),
-            new Agent("S" + idx, places[3], covidCentre)
+        agents = [...Array(Dim.numAgentsEachHouse).keys()].flatMap( idx => [
+            new Agent("G" + idx, places[0], covidCentres),
+            new Agent("M" + idx, places[1], covidCentres),
+            new Agent("L" + idx, places[2], covidCentres),
+            new Agent("S" + idx, places[3], covidCentres)
         ])
         agents[agents.length - 1].state = State.INFECTED
         agents[agents.length - 1].medicalStatus = new MedicalStatus(new Date(date))
@@ -128,7 +130,7 @@ onmessage = function(event) {
         var draw = function() {
             var context = canvas.getContext("2d")
             context.clearRect(0, 0, canvas.width, canvas.height)
-            covidCentre.draw(context)
+            covidCentres.forEach(c => c.draw(context))
             places.forEach(p => p.draw(context))
             agents.forEach(a => a.draw(context))
             context.fillStyle = Colors.text
@@ -144,7 +146,7 @@ onmessage = function(event) {
         }
         // Ack the creator that the initialization process has finished
         postMessage({message: Message.initMamChannels,
-            agentsNumber: agents.length})
+            agentsNumber: agents.length, diagnostNumber: covidCentres.length})
 
         // Start the rendering loop
         draw()

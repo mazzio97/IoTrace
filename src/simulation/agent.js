@@ -2,7 +2,7 @@ import { Colors, Dim, Probabilities, Time } from './constants.js'
 import { SecurityToolBox } from '../iota/security'
 
 class Agent {
-    constructor(name, home, covidCentre, initialState = State.NORMAL, medicalStatus = new MedicalStatus()) {
+    constructor(name, home, covidCentres, initialState = State.NORMAL, medicalStatus = new MedicalStatus()) {
         this.name = name
         // Location info
         this.home = home
@@ -10,7 +10,7 @@ class Agent {
         this.y = home.getRandomY()
         this.targetX = undefined
         this.targetY = undefined
-        this.covidCentre = covidCentre
+        this.covidCentres = covidCentres
          // Positions not already saved in the Tangle
         this.history = []
         // Tangle related info
@@ -25,7 +25,7 @@ class Agent {
         this.secutityToolbox = new SecurityToolBox()
         this.geosolverPublicKey = 'uhayO4JgKQ8SPZqg1xReY3USXTm1OrF3F8VzOfht1TE='
         this.needsToPublish = false
-        this.localDim = 5 // Math.floor(Math.random() * 6) + 1
+        this.localDim = 2
         this.randomDelay = Math.random() * 10000
     }
 
@@ -37,7 +37,7 @@ class Agent {
     readNotification() {
         // TODO: read notification blockchain
         this.state = State.NOTIFIED
-        this.move(this.covidCentre.getRandomX(), this.covidCentre.getRandomY())
+        this.move(this.covidCentres[0].getRandomX(), this.covidCentres[0].getRandomY())
     }
 
     updatePosition(places, date) {
@@ -55,8 +55,8 @@ class Agent {
                 this.x = this.x + deltaX * Time.agentVelocity / length      
                 this.y = this.y + deltaY * Time.agentVelocity / length
             }
-        } else if (this.state != State.QUARANTINED && this.covidCentre.checkIn(this.x, this.y)) {
-            this.covidCentre.diagnostician.visit(this, date)
+        } else if (this.state != State.QUARANTINED && this.covidCentres[0].checkIn(this.x, this.y)) {
+            this.covidCentres[0].diagnostician.visit(this, date)
         }
         
         // Finally, if the agent is still not quarantined, it can choose a new target with given probability
@@ -69,7 +69,7 @@ class Agent {
     }
 
     updateHistory() {
-        if (this.name == "G1") {
+        if (this.name == "G0") {
             console.log(this.name + ": " + this.x + ", " + this.y + " " + this.lastWriting)
         }
         this.history.push({x: this.x, y: this.y, date: this.lastWriting})

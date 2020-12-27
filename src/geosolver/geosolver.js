@@ -1,15 +1,10 @@
 import * as jDBSCAN from 'jdbscan'
-
-import * as Iota from '@iota/core'
-// import Mam from '@iota/mam'
 import { trytesToAscii } from '@iota/converter'
 import { SecurityToolBox } from '../iota/security'
-import { Security } from '../simulation/constants'
+import { Security, Message, MamSettings } from '../simulation/constants'
+import * as Mam from '@iota/mam'
 
-const provider = 'https://nodes.devnet.iota.org'
-const mode = 'public'
-const iota = Iota.composeAPI({ provider: provider })
-// Mam.init(provider)
+let agentsChannels = []
 
 export class GeoSolver {
 	constructor(distance, timeInterval, people=1) {
@@ -20,31 +15,24 @@ export class GeoSolver {
                 return Number.POSITIVE_INFINITY
 			}
 		})
-
 		this.securityToolbox = new SecurityToolBox(Security.geosolverPrivatekey)
-	}
-
-	updateInfected() {
-		iota.findTransactionObjects({ tags: ['GEOPOSIOTRACE'] })
-			.then(async txs => Promise.all([...new Set(txs.map(tx => tx.address))]
-				.map(async root => {
-					const result = await Mam.fetchSingle(root, mode)
-					const json = JSON.parse(trytesToAscii(result.payload))
-					return {
-						x: parseFloat(this.securityToolbox.decryptMessage(json.x, json.publicKey)),
-						y: parseFloat(this.securityToolbox.decryptMessage(json.y, json.publicKey)),
-						timestamp: Date.parse(this.securityToolbox.decryptMessage(json.date, json.publicKey)) / 1000
-					}
-				}))
-			)
-			.then(positions => {
-				console.log(positions)
-				const scan = this.dbscanner.data(positions)
-				var pointAssignmentResult = scan()
-				console.log(pointAssignmentResult)
-			})
 	}
 }
 
-// new GeoSolver(100, 20).updateInfected()
+onmessage = async event => {
+	if (event.data.message == "initAgentsChannels") {
+		agentsChannels = event.data.channels
+	}
+	if (event.data.message == Message.calculatePossibleInfections) {
+		agentsChannels.forEach(async mam => {
+			const result = await mam.read()
+			// TODO: Fix result being undefined
+            result.messages.forEach(message => {
+                console.log(JSON.parse(trytesToAscii(message)))
+            })
+		})
+		postMessage({message: Message.triggerAgents})
+	}
+}
+
 export default {}

@@ -1,3 +1,5 @@
+const webpack = require('webpack')
+
 module.exports = {
 	resolve: {
 		fallback: {
@@ -23,5 +25,18 @@ module.exports = {
 	output: {
 	  path: `${__dirname}/dist`,
 	  filename: '[name].bundle.js',
-	}
+	},
+	module: {
+		rules: [{
+			test: /\.js$/,
+			exclude: /node_modules/,
+			use: ['eslint-loader'],
+		}],
+	},
+	plugins: [
+		new webpack.ProvidePlugin({
+		  process: 'process/browser',
+		  Buffer: ['buffer', 'Buffer'],
+		}),
+	]
 };

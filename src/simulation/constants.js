@@ -22,7 +22,8 @@ const Dim = {
 	agentRadius: 5,
 	infectionRadius: 30,
 	selectedStrokeWidth: 3,
-	offset: 60
+	offset: 60,
+	numAgentsEachHouse: 1
 }
 
 const Probabilities = {
@@ -51,7 +52,21 @@ const Message = {
 	startWebGLWorker: 'startWebGLWorker',
 	initMamChannels: 'initMamChannels',
 	agentWriteOnMam: 'agentWriteOnMam',
-	diagnosticianWriteOnMam: 'diagnosticianWriteOnMam'
+	diagnosticianWriteOnMam: 'diagnosticianWriteOnMam',
+	calculatePossibleInfections: 'calculatePossibleInfections',
+	triggerAgents: 'triggerAgents'
 }
 
-export {Colors, Dim, Probabilities, Time, Security, Message}
+// const Seed = {
+// 	appId: 'iotrace',
+// 	agentId: 'agent',
+// 	diagnosticianId: 'diagnost',
+// 	simulationId: '0000'
+// }
+
+const MamSettings = {
+	mode: 'public',
+	provider: 'https://nodes.devnet.iota.org'
+}
+
+export {Colors, Dim, Probabilities, Time, Security, Message, MamSettings}
