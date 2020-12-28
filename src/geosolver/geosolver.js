@@ -3,6 +3,7 @@ import { trytesToAscii } from '@iota/converter'
 import { SecurityToolBox } from '../iota/security'
 import { Security, Message, MamSettings } from '../simulation/constants'
 import * as Mam from '@iota/mam'
+import { MamGate } from '../iota/mam_gate'
 
 let agentsChannels = []
 
@@ -21,16 +22,11 @@ export class GeoSolver {
 
 onmessage = async event => {
 	if (event.data.message == "initAgentsChannels") {
-		agentsChannels = event.data.channels
+		agentsChannels = event.data.seeds.map(s => new MamGate(MamSettings.provider, MamSettings.mode, s))
+		// console.log(agentsChannels)
 	}
 	if (event.data.message == Message.calculatePossibleInfections) {
-		agentsChannels.forEach(async mam => {
-			const result = await mam.read()
-			// TODO: Fix result being undefined
-            result.messages.forEach(message => {
-                console.log(JSON.parse(trytesToAscii(message)))
-            })
-		})
+		agentsChannels.forEach(async mam => await mam.read())
 		postMessage({message: Message.triggerAgents})
 	}
 }

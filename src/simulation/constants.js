@@ -57,16 +57,16 @@ const Message = {
 	triggerAgents: 'triggerAgents'
 }
 
-// const Seed = {
-// 	appId: 'iotrace',
-// 	agentId: 'agent',
-// 	diagnosticianId: 'diagnost',
-// 	simulationId: '0000'
-// }
+const Seed = {
+	appId: 'iotrace',
+	agentId: 'agent',
+	diagnostId: 'diagnost',
+	simId: '0000'
+}
 
 const MamSettings = {
 	mode: 'public',
 	provider: 'https://nodes.devnet.iota.org'
 }
 
-export {Colors, Dim, Probabilities, Time, Security, Message, MamSettings}
+export {Colors, Dim, Probabilities, Time, Security, Message, Seed, MamSettings}

@@ -61,7 +61,8 @@ window.onload = () => {
             for (const i of Array(event.data.agentsNumber).keys()) {
                 agentsChannels.push({
                     mam: new MamGate(
-                        MamSettings.provider, MamSettings.mode
+                        MamSettings.provider, MamSettings.mode,
+                        generateSeed(Seed.appId + "-sim" + Seed.simId + '-' + Seed.agentId + i)
                     ),
                     security: new SecurityToolBox()
                 })
@@ -69,14 +70,16 @@ window.onload = () => {
             for (const i of Array(event.data.diagnostNumber).keys()) {
                 diagnostChannels.push({
                     mam: new MamGate(
-                        MamSettings.provider, MamSettings.mode
+                        MamSettings.provider, MamSettings.mode,
+                        generateSeed(Seed.agentId + "-sim" + Seed.simId + '-' + Seed.diagnostId + i)
                     ),
                     security: new SecurityToolBox()
                 })
             }
             geosolver.postMessage({
                 message: "initAgentsChannels",
-                channels: agentsChannels.map(c => c.mam.copy())
+                roots: agentsChannels.map(c => c.mam.root),
+                seeds: agentsChannels.map(c => c.mam.seed)
             })
         } else if (event.data.message == Message.agentWriteOnMam) {
             // Agent writing on Mam

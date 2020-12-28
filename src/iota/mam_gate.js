@@ -12,7 +12,7 @@ class MamGate {
 		this.tag = tag
 	}
 
-	async publish(packet, verbose=false) {
+	async publish(packet, verbose=true) {
 		// Create MAM message as a string of trytes
 		const trytes = asciiToTrytes(JSON.stringify(packet))
 		const message = await Mam.create(this.mamState, trytes)
@@ -30,7 +30,7 @@ class MamGate {
 			console.log('Published @ ' + address + ':', packet)
 		}
 		
-		this.read()
+		// this.read()
 
 		return address
 	}
@@ -39,10 +39,6 @@ class MamGate {
 		// Output synchronously once fetch is completed
 		const result = await Mam.fetch(this.root, this.mode)
 		result.messages.forEach(message => console.log('Fetched and parsed', JSON.parse(trytesToAscii(message)), '\n'))
-	}
-
-	copy() {
-		return new MamGate(this.provider, this.mode, this.seed, this.tag)
 	}
 }
 
