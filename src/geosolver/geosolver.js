@@ -2,9 +2,11 @@ import * as jDBSCAN from 'jdbscan'
 import { trytesToAscii } from '@iota/converter'
 import { SecurityToolBox } from '../iota/security'
 import { Security, Message, MamSettings } from '../simulation/constants'
-import { MamGate } from '../iota/mam_gate'
+import { MamReader } from '../iota/mam_gate'
+import { connected } from 'process'
 
 let agentsChannels = []
+let cache = new Array()
 
 export default class GeoSolver {
 	constructor(distance, timeInterval, people=1) {
@@ -39,15 +41,21 @@ const geosolver = new GeoSolver(100, 20)
 
 onmessage = async event => {
 	if (event.data.message == "initAgentsChannels") {
-		agentsChannels = event.data.seeds.map(s => new MamGate(MamSettings.provider, MamSettings.mode, s))
-		console.log(agentsChannels)
+		agentsChannels = event.data.seeds.map(s => new MamReader(MamSettings.provider, s))
 	}
 	if (event.data.message == Message.calculatePossibleInfections) {
-		const data = await Promise.all(agentsChannels.map(async mam => {
-			await mam.read()
-			return mam.localStorage
+		console.log('Retrieving new data...')
+		const newData = await Promise.all(agentsChannels.map(async mam => {
+			let payloads = await mam.read()
+			// TODO: decrypt payloads
+			// TODO: flatMap from bundle of sensor data into single sensor data
+			return payloads
 		}))
-		geosolver.computePossibleInfections(data.flat())
+		cache = cache.concat(newData.flat())
+		// TODO: filter out old data from cache
+		console.log(cache)
+
+		geosolver.computePossibleInfections(cache)
 		
 		postMessage({message: Message.triggerAgents})
 	}

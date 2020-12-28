@@ -48,7 +48,8 @@ const Security = {
 
 const Message = {
 	click: 'click',
-	pauseResume: 'pauseResume',
+	pause: 'pause',
+	resume: 'resume',
 	startWebGLWorker: 'startWebGLWorker',
 	initMamChannels: 'initMamChannels',
 	agentWriteOnMam: 'agentWriteOnMam',
@@ -65,7 +66,6 @@ const Seed = {
 }
 
 const MamSettings = {
-	mode: 'public',
 	provider: 'https://nodes.devnet.iota.org'
 }
 
