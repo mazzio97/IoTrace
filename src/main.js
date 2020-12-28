@@ -66,6 +66,7 @@ window.onload = () => {
                     ),
                     security: new SecurityToolBox()
                 })
+                console.log(agentsChannels[i].mam.root)
             }
             for (const i of Array(event.data.diagnostNumber).keys()) {
                 diagnostChannels.push({
@@ -78,7 +79,6 @@ window.onload = () => {
             }
             geosolver.postMessage({
                 message: "initAgentsChannels",
-                roots: agentsChannels.map(c => c.mam.root),
                 seeds: agentsChannels.map(c => c.mam.seed)
             })
         } else if (event.data.message == Message.agentWriteOnMam) {

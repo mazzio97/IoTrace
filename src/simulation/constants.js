@@ -61,7 +61,7 @@ const Seed = {
 	appId: 'iotrace',
 	agentId: 'agent',
 	diagnostId: 'diagnost',
-	simId: '0000'
+	simId: '0001'
 }
 
 const MamSettings = {
