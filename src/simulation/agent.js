@@ -2,7 +2,7 @@ import { Colors, Dim, Probabilities, Time } from './constants.js'
 import { SecurityToolBox } from '../iota/security'
 
 class Agent {
-    constructor(name, home, covidCentres, initialState = State.NORMAL, medicalStatus = new MedicalStatus()) {
+    constructor(name, home, covidCentre, initialState = State.NORMAL, medicalStatus = new MedicalStatus()) {
         this.name = name
         // Location info
         this.home = home
@@ -10,7 +10,7 @@ class Agent {
         this.y = home.getRandomY()
         this.targetX = undefined
         this.targetY = undefined
-        this.covidCentres = covidCentres
+        this.covidCentre = covidCentre
          // Positions not already saved in the Tangle
         this.history = []
         // Tangle related info
@@ -22,7 +22,7 @@ class Agent {
         // GUI
         this.selected = false
         this.lastWriting = undefined
-        this.secutityToolbox = new SecurityToolBox()
+        this.securityToolbox = new SecurityToolBox()
         this.geosolverPublicKey = 'uhayO4JgKQ8SPZqg1xReY3USXTm1OrF3F8VzOfht1TE='
         this.needsToPublish = false
         this.localDim = 2
@@ -37,7 +37,7 @@ class Agent {
     readNotification() {
         // TODO: read notification blockchain
         this.state = State.NOTIFIED
-        this.move(this.covidCentres[0].getRandomX(), this.covidCentres[0].getRandomY())
+        this.move(this.covidCentre.getRandomX(), this.covidCentre.getRandomY())
     }
 
     updatePosition(places, date) {
@@ -55,8 +55,8 @@ class Agent {
                 this.x = this.x + deltaX * Time.agentVelocity / length      
                 this.y = this.y + deltaY * Time.agentVelocity / length
             }
-        } else if (this.state != State.QUARANTINED && this.covidCentres[0].checkIn(this.x, this.y)) {
-            this.covidCentres[0].diagnostician.visit(this, date)
+        } else if (this.state != State.QUARANTINED && this.covidCentre.checkIn(this.x, this.y)) {
+            this.covidCentre.diagnostician.visit(this, date)
         }
         
         // Finally, if the agent is still not quarantined, it can choose a new target with given probability

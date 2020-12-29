@@ -56,7 +56,7 @@ onmessage = async event => {
 		console.log(cache)
 
 		geosolver.computePossibleInfections(cache)
-		
+
 		postMessage({message: Message.triggerAgents})
 	}
 }

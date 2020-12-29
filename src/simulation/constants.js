@@ -69,4 +69,4 @@ const MamSettings = {
 	provider: 'https://nodes.devnet.iota.org'
 }
 
-export {Colors, Dim, Probabilities, Time, Security, Message, Seed, MamSettings}
+export { Colors, Dim, Probabilities, Time, Security, Message, Seed, MamSettings }

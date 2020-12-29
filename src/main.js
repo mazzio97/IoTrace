@@ -15,13 +15,13 @@ window.onload = () => {
     addGUIEventListeners()
     
     // GUI worker
-    worker.onmessage = function(event) {
+    worker.onmessage = event => {
         if (event.data.message == Message.initMamChannels) { 
             initializeMamChannels(event) 
         } else if (event.data.message == Message.agentWriteOnMam) { 
             agentWriteOnMam(event) 
         } else if (event.data.message == Message.diagnosticianWriteOnMam) { 
-            diagnosticianWriteOnMam(event) 
+            // diagnosticianWriteOnMam(event) 
         } else {
             throw new Error('Illegal message for the Web Worker')
         }
