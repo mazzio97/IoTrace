@@ -1,5 +1,6 @@
-import { Colors, Dim, Probabilities, Time } from './constants.js'
+import { Colors, Dim, Probabilities, Security, Time } from './constants.js'
 import { SecurityToolBox } from '../iota/security'
+import { generateSeed } from '../iota/generate.js'
 
 class Agent {
     constructor(name, home, covidCentre, initialState = State.NORMAL, medicalStatus = new MedicalStatus()) {
@@ -23,7 +24,7 @@ class Agent {
         this.selected = false
         this.lastWriting = undefined
         this.securityToolbox = new SecurityToolBox()
-        this.geosolverPublicKey = 'uhayO4JgKQ8SPZqg1xReY3USXTm1OrF3F8VzOfht1TE='
+        this.id = generateSeed()
         this.needsToPublish = false
         this.localDim = 2
         this.randomDelay = Math.random() * 10000
@@ -69,9 +70,6 @@ class Agent {
     }
 
     updateHistory() {
-        if (this.name == "G0") {
-            console.log(this.name + ": " + this.x + ", " + this.y + " " + this.lastWriting)
-        }
         this.history.push({x: this.x, y: this.y, date: this.lastWriting})
     }
 

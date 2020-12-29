@@ -21,12 +21,14 @@ window.onload = () => {
     var offscreen = canvas.transferControlToOffscreen()
 
     // Start WebGL worker
-    webgl.postMessage({message: Message.startWebGLWorker,
+    webgl.postMessage({
+        message: Message.startWebGLWorker,
         canvas: offscreen,
         width: window.innerWidth,
         height: window.innerHeight,
         offsetLeft: canvas.offsetLeft,
-        offsetTop: canvas.offsetTop}, [offscreen])    
+        offsetTop: canvas.offsetTop
+    }, [offscreen])
 
     // Play/Pause event listener
     toggle.addEventListener('click', _ => {
@@ -41,9 +43,11 @@ window.onload = () => {
 
     // Add event listener to select agents
     canvas.addEventListener('click', event => { 
-        webgl.postMessage({message: Message.click, 
+        webgl.postMessage({
+            message: Message.click, 
             clientX: event.clientX, 
-            clientY: event.clientY})
+            clientY: event.clientY
+        })
     }, false)
 
     solver.addEventListener('click', _ => {
@@ -53,33 +57,36 @@ window.onload = () => {
     })
 
     // GUI worker
-    webgl.onmessage = function(event) {
-        if (event.data.message == Message.initMamChannels) { 
-            initializeMamChannels(event)
+    webgl.onmessage = event => {
+        const data = event.data
+        console.log('From WebGL to Main:', data)
+        if (data.message == Message.initMamChannels) { 
+            initializeMamChannels(data.agentsNumber, data.diagnostNumber)
             geosolver.postMessage({
                 message: "initAgentsChannels",
                 seeds: agentsChannels.map(c => c.mam.getSeed())
             })
-        } else if (event.data.message == Message.agentWriteOnMam) { 
-            agentWriteOnMam(event) 
-        } else if (event.data.message == Message.diagnosticianWriteOnMam) { 
-            diagnosticianWriteOnMam(event) 
+        } else if (data.message == Message.agentWriteOnMam) { 
+            agentWriteOnMam(data.agentIndex, data.agent) 
+        } else if (data.message == Message.diagnosticianWriteOnMam) { 
+            diagnosticianWriteOnMam(data.agentIndex, data.agent) 
         } else {
-            throw new Error('Illegal message for the Web Worker')
+            throw new Error('Illegal message from the Web Worker')
         }
     }
 
     // Geosolver worker
     geosolver.onmessage = event => {
+        console.log('From Geosolver to Main:', event.data)
         if (event.data.message == Message.triggerAgents) {
             console.log("Notifications")
         }
     }
 }
 
-function initializeMamChannels(event) {
+function initializeMamChannels(agentsNumber, diagnostNumber) {
     // Agents' mam channels initialization
-    for (const i of Array(event.data.agentsNumber).keys()) {
+    for (const i of Array(agentsNumber).keys()) {
         agentsChannels.push({
             mam: new MamWriter(
                 MamSettings.provider, generateSeed(Seed.appId + "-sim" + Seed.simId + '-' + Seed.agentId + i)
@@ -87,7 +94,7 @@ function initializeMamChannels(event) {
             security: new SecurityToolBox()
         })
     }
-    for (const i of Array(event.data.diagnostNumber).keys()) {
+    for (const i of Array(diagnostNumber).keys()) {
         diagnostChannels.push({
             mam: new MamWriter(
                 MamSettings.provider, generateSeed(Seed.agentId + "-sim" + Seed.simId + '-' + Seed.diagnostId + i)
@@ -97,31 +104,34 @@ function initializeMamChannels(event) {
     }
 }
 
-function agentWriteOnMam(event) {
+function agentWriteOnMam(agentIndex, agent) {
     // Agent writing on Mam
-    agentsChannels[event.data.agentIndex].mam.publish({
-        message: agentsChannels[event.data.agentIndex].security.encryptMessage(event.data.agent.name, 
-            agentsChannels[event.data.agentIndex].security.keys.publicKey),                
-        history: agentsChannels[event.data.agentIndex].security.encryptMessage(JSON.stringify(event.data.agent.history),
-            Security.geosolverPublicKey),
-        agentPublicKey: agentsChannels[event.data.agentIndex].security.keys.publicKey
+    agentsChannels[agentIndex].mam.publish({
+        bundle: agentsChannels[agentIndex].security.encryptMessage(
+            JSON.stringify({
+                id: agent.id,
+                history: agent.history
+            }),
+            Security.geosolverPublicKey
+        ),
+        agentPublicKey: agentsChannels[agentIndex].security.keys.publicKey
     })
 }
 
-function diagnosticianWriteOnMam(event) {
+function diagnosticianWriteOnMam(agentIndex, agent) {
     // Diagnosticians writing on Mam
     var dateCypher = diagnostChannels[0].security.encryptMessage(
-        JSON.stringify(event.data.agent.medicalStatus.quarantinedDate), 
+        JSON.stringify(agent.medicalStatus.quarantinedDate), 
         diagnostChannels[0].security.keys.publicKey
     )
     diagnostChannels[0].mam.publish({
-        message: agentsChannels[event.data.agentIndex].security.encryptMessage(
-            event.data.agent.name, 
-            agentsChannels[event.data.agentIndex].security.keys.publicKey
+        message: agentsChannels[agentIndex].security.encryptMessage(
+            agent.name, 
+            agentsChannels[agentIndex].security.keys.publicKey
         ),
         date: dateCypher,
         signature: diagnostChannels[0].security.signMessage(dateCypher),
-        agentPublicKey: agentsChannels[event.data.agentIndex].security.keys.publicKey,
+        agentPublicKey: agentsChannels[agentIndex].security.keys.publicKey,
         diagnosticianPublicKey: diagnostChannels[0].security.keys.publicKey
     })
 }

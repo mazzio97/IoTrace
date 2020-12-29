@@ -19,6 +19,7 @@ var canvasOffsetTop = undefined
 var agents = undefined
 
 onmessage = function(event) {
+    console.log('From Main to WebGL:', event.data)
     if (event.data.message == Message.pauseResume) {
         // Pause/Resume button handler
         pause = !pause
@@ -92,18 +93,20 @@ onmessage = function(event) {
 
         var tick = function() {
             // Update simulation
-            agents.forEach(a => a.updatePosition(places, date))
+            agents.forEach(a => a.updatePosition(places, new Date(date)))
 
             // Diagnosticians writing on Mam
             agents.map((a, i) => [i, a]).filter(a => a[1].medicalStatus.waitMedicalUpdate).forEach(a => {
-                postMessage({message: Message.diagnosticianWriteOnMam,
+                postMessage({
+                    message: Message.diagnosticianWriteOnMam,
                     agentIndex: a[0],
-                    agent: a[1]})
+                    agent: a[1]
+                })
                 a[1].medicalStatus.waitMedicalUpdate = false
             })
 
             // Update infection simulation
-            agents.forEach(a => a.checkInfection(agents, date))
+            agents.forEach(a => a.checkInfection(agents, new Date(date)))
 
             // Agents writing on Mam
             agents.forEach((a, i) => {
@@ -113,9 +116,11 @@ onmessage = function(event) {
                     a.updateHistory()
 
                     if (a.needsToPublish) {
-                        postMessage({message: Message.agentWriteOnMam,
+                        postMessage({
+                            message: Message.agentWriteOnMam,
                             agentIndex: i,
-                            agent: a})
+                            agent: a
+                        })
                         a.clearHistory()
                     }
                 }
@@ -143,8 +148,11 @@ onmessage = function(event) {
             requestAnimationFrame(render)
         }
         // Ack the creator that the initialization process has finished
-        postMessage({message: Message.initMamChannels,
-            agentsNumber: agents.length, diagnostNumber: 1})
+        postMessage({
+            message: Message.initMamChannels,
+            agentsNumber: agents.length,
+            diagnostNumber: 1
+        })
 
         // Start the rendering loop
         draw()

@@ -48,8 +48,7 @@ const Security = {
 
 const Message = {
 	click: 'click',
-	pause: 'pause',
-	resume: 'resume',
+	pauseResume: 'pauseResume',
 	startWebGLWorker: 'startWebGLWorker',
 	initMamChannels: 'initMamChannels',
 	agentWriteOnMam: 'agentWriteOnMam',
@@ -62,7 +61,7 @@ const Seed = {
 	appId: 'iotrace',
 	agentId: 'agent',
 	diagnostId: 'diagnost',
-	simId: '0001'
+	simId: '0002'
 }
 
 const MamSettings = {

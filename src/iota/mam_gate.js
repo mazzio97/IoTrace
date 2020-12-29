@@ -15,6 +15,10 @@ class MamWriter {
 		return this.mamState.seed
 	}
 
+	getReader(provider) {
+		return new MamReader(provider, this.getSeed())
+	}
+
 	async publish(packet, verbose=false) {
 		// Create MAM message as a string of trytes
 		const trytes = asciiToTrytes(JSON.stringify(packet))
@@ -41,9 +45,9 @@ class MamReader {
 		this.currentRoot = this.startRoot
 	}
 
-	async read(verbose=false) {
+	async read(limit=undefined, verbose=false) {
 		// Output synchronously once fetch is completed
-		const result = await Mam.fetch(this.currentRoot, 'public')
+		const result = await Mam.fetch(this.currentRoot, 'public', undefined, undefined, limit)
 		this.currentRoot = result.nextRoot
 		return result.messages.map(message => {
 			const json = JSON.parse(trytesToAscii(message))

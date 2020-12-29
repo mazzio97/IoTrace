@@ -3,10 +3,11 @@ import { trytesToAscii } from '@iota/converter'
 import { SecurityToolBox } from '../iota/security'
 import { Security, Message, MamSettings } from '../simulation/constants'
 import { MamReader } from '../iota/mam_gate'
-import { connected } from 'process'
+import { Time } from '../simulation/constants.js'
 
 let agentsChannels = []
-let cache = new Array()
+let agentsCache = new Array()
+let infectedCache = new Array()
 
 export default class GeoSolver {
 	constructor(distance, timeInterval, people=1) {
@@ -23,39 +24,42 @@ export default class GeoSolver {
 	computePossibleInfections(data) {
 		console.log("I'm going to calculate infections using the following data:")
 		console.log(data)
-		// return {
-		// 	x: parseFloat(this.securityToolbox.decryptMessage(json.x, json.publicKey)),
-		// 	y: parseFloat(this.securityToolbox.decryptMessage(json.y, json.publicKey)),
-		// 	timestamp: Date.parse(this.securityToolbox.decryptMessage(json.date, json.publicKey)) / 1000
-		// }
-		// .then(positions => {
-		// 	console.log(positions)
-		// 	const scan = this.dbscanner.data(positions)
-		// 	var pointAssignmentResult = scan()
-		// 	console.log(pointAssignmentResult)
-		// })
+		const scan = this.dbscanner.data(data)
+		var pointAssignmentResult = scan()
+		console.log(pointAssignmentResult)
 	}
 }
 
 const geosolver = new GeoSolver(100, 20)
 
 onmessage = async event => {
-	if (event.data.message == "initAgentsChannels") {
-		agentsChannels = event.data.seeds.map(s => new MamReader(MamSettings.provider, s))
+	const data = event.data
+	console.log('From Main to Geosolver:', data)
+	if (data.message == "initAgentsChannels") {
+		agentsChannels = data.seeds.map(s => new MamReader(MamSettings.provider, s))
 	}
-	if (event.data.message == Message.calculatePossibleInfections) {
-		console.log('Retrieving new data...')
+	if (data.message == Message.calculatePossibleInfections) {
 		const newData = await Promise.all(agentsChannels.map(async mam => {
 			let payloads = await mam.read()
-			// TODO: decrypt payloads
-			// TODO: flatMap from bundle of sensor data into single sensor data
+			payloads = payloads.flatMap(p => {
+				const decrypted = JSON.parse(geosolver.securityToolbox.decryptMessage(p.history, p.agentPublicKey))
+				return decrypted.history.map(transaction => {
+					transaction.id = decrypted.id
+					transaction.date = Date.parse(transaction.date) / 1000
+					return transaction
+				})
+			})
 			return payloads
 		}))
-		cache = cache.concat(newData.flat())
+		agentsCache = agentsCache.concat(newData.flat())
+		// cache = cache.filter()
 		// TODO: filter out old data from cache
-		console.log(cache)
 
-		geosolver.computePossibleInfections(cache)
+		console.log(Time.currentDate)
+
+		if (infectedCache.length > 0) {
+			geosolver.computePossibleInfections(agentsCache.concat(infectedCache))
+		}
 
 		postMessage({message: Message.triggerAgents})
 	}
