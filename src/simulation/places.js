@@ -1,5 +1,5 @@
+import { State } from './agent.js'
 import { Colors } from './constants.js'
-import { Diagnostician } from './diagnostician.js'
 
 class Place {
     constructor(name, x, y, r) {
@@ -31,11 +31,23 @@ class Place {
     }
 }
 
-class CovidCentre extends Place {
-    constructor(x, y, r) {
-        super('Covid Centre', x, y, r)
-        this.diagnostician = new Diagnostician()
+class Diagnostician extends Place {
+    constructor(id, x, y, r) {
+        super('Diagnostician', x, y, r)
+        this.id = id
+        this.signature = generateSeed()
+    }
+
+    // if an agent is infected and not yet quarantined it gets quarantined and the agent is asked to publish on the infected blockchain
+    visit(agent, date) {
+        if (agent.state != State.QUARANTINED && agent.medicalStatus.infectionDate !== undefined) {
+            agent.state = State.QUARANTINED
+            if (agent.medicalStatus.certifiedPositiveBy == undefined) {
+                agent.medicalStatus.certifiedPositiveBy = this.id
+            }
+            agent.medicalStatus.quarantinedDate = new Date(date)
+        }
     }
 }
 
-export { Place, CovidCentre }
+export { Place, Diagnostician }

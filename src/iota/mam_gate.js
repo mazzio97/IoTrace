@@ -15,11 +15,7 @@ class MamWriter {
 		return this.mamState.seed
 	}
 
-	getReader(provider) {
-		return new MamReader(provider, this.getSeed())
-	}
-
-	async publish(packet, verbose=false) {
+	async publish(packet, verbose=true) {
 		// Create MAM message as a string of trytes
 		const trytes = asciiToTrytes(JSON.stringify(packet))
 		const message = Mam.create(this.mamState, trytes)

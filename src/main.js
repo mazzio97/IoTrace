@@ -1,5 +1,5 @@
 import { generateSeed } from './iota/generate.js'
-import { MamWriter } from './iota/mam_gate.js'
+import { MamReader, MamWriter } from './iota/mam_gate.js'
 import { Message, Security } from '../src/simulation/constants.js'
 import { SecurityToolBox } from './iota/security.js'
 import { Seed, MamSettings } from './simulation/constants'
@@ -64,12 +64,13 @@ window.onload = () => {
             initializeMamChannels(data.agentsNumber, data.diagnostNumber)
             geosolver.postMessage({
                 message: "initAgentsChannels",
-                seeds: agentsChannels.map(c => c.mam.getSeed())
+                agentsSeeds: agentsChannels.map(c => c.mam.getSeed()),
+                diagnosticiansSeeds: diagnostChannels.map(c => c.mam.getSeed())
             })
         } else if (data.message == Message.agentWriteOnMam) { 
             agentWriteOnMam(data.agentIndex, data.agent) 
         } else if (data.message == Message.diagnosticianWriteOnMam) { 
-            diagnosticianWriteOnMam(data.agentIndex, data.agent) 
+            diagnosticianWriteOnMam(data.agentIndex, data.diagnosticianIndex, data.diagnosticianSignature) 
         } else {
             throw new Error('Illegal message from the Web Worker')
         }
@@ -107,31 +108,23 @@ function initializeMamChannels(agentsNumber, diagnostNumber) {
 function agentWriteOnMam(agentIndex, agent) {
     // Agent writing on Mam
     agentsChannels[agentIndex].mam.publish({
-        bundle: agentsChannels[agentIndex].security.encryptMessage(
-            JSON.stringify({
-                id: agent.id,
-                history: agent.history
-            }),
+        id: agent.id,
+        history: agentsChannels[agentIndex].security.encryptMessage(
+            JSON.stringify(agent.history),
             Security.geosolverPublicKey
         ),
         agentPublicKey: agentsChannels[agentIndex].security.keys.publicKey
     })
 }
 
-function diagnosticianWriteOnMam(agentIndex, agent) {
-    // Diagnosticians writing on Mam
-    var dateCypher = diagnostChannels[0].security.encryptMessage(
-        JSON.stringify(agent.medicalStatus.quarantinedDate), 
-        diagnostChannels[0].security.keys.publicKey
-    )
-    diagnostChannels[0].mam.publish({
-        message: agentsChannels[agentIndex].security.encryptMessage(
-            agent.name, 
-            agentsChannels[agentIndex].security.keys.publicKey
-        ),
-        date: dateCypher,
-        signature: diagnostChannels[0].security.signMessage(dateCypher),
-        agentPublicKey: agentsChannels[agentIndex].security.keys.publicKey,
-        diagnosticianPublicKey: diagnostChannels[0].security.keys.publicKey
+async function diagnosticianWriteOnMam(agentIndex, diagnosticianIndex, diagnosticianSignature) {
+    // Diagnostician reads agents' transactions from their mam channel
+    let mam = new MamReader(MamSettings.provider, agentsChannels[agentIndex].mam.getSeed())
+    let payloads = await mam.read()
+    // Diagnostician writes single transaction with all the data without the id
+    diagnostChannels[diagnosticianIndex].mam.publish({
+        bundle: payloads.map(p => p.history),
+        agentPublicKey: payloads[0].agentPublicKey,
+        diagnosticianSignature: diagnosticianSignature
     })
 }

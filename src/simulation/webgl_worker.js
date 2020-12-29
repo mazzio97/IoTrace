@@ -1,5 +1,5 @@
 import { Agent, MedicalStatus, State } from './agent.js'
-import { Place, CovidCentre } from './places.js'
+import { Place, Diagnostician } from './places.js'
 import { Time, Colors, Dim, Message } from './constants.js'
 
 // Global Variables
@@ -67,18 +67,20 @@ onmessage = function(event) {
             new Place('Lombardi\'s', radius + Dim.offset, event.data.height - (radius + Dim.offset), radius),
             new Place('SomeoneElse\'s', event.data.width - (radius + Dim.offset), event.data.height - (radius + Dim.offset), radius),
             new Place('Pub', 600, 200, radius),
-            new Place('Mall', 1000, 450, 1.4 * radius),
-            new Place('Campus', 550, 500, 1.2 * radius)
+            new Place('Mall', 1000, 450, 1.4 * radius)
         )
 
-        var covidCentre = new CovidCentre(900, 150, 1.2 * radius)
+        let diagnosticians = new Array(
+            new Diagnostician(0, 550, 500, 0.8 * radius),
+            new Diagnostician(1, 1000, 150, 0.8 * radius)
+        )
 
         // List of agents
         agents = [...Array(Dim.numAgentsEachHouse).keys()].flatMap( idx => [
-            new Agent("G" + idx, places[0], covidCentre),
-            new Agent("M" + idx, places[1], covidCentre),
-            new Agent("L" + idx, places[2], covidCentre),
-            new Agent("S" + idx, places[3], covidCentre)
+            new Agent("G" + idx, places[0], diagnosticians[0]),
+            new Agent("M" + idx, places[1], diagnosticians[1]),
+            new Agent("L" + idx, places[2], diagnosticians[0]),
+            new Agent("S" + idx, places[3], diagnosticians[1])
         ])
         agents[agents.length - 1].state = State.INFECTED
         agents[agents.length - 1].medicalStatus = new MedicalStatus(new Date(date))
@@ -96,13 +98,16 @@ onmessage = function(event) {
             agents.forEach(a => a.updatePosition(places, new Date(date)))
 
             // Diagnosticians writing on Mam
-            agents.map((a, i) => [i, a]).filter(a => a[1].medicalStatus.waitMedicalUpdate).forEach(a => {
+            agents.map((a, i) => [i, a]).filter(tuple => tuple[1].medicalStatus.certifiedPositiveBy !== undefined).forEach(tuple => {
+                var index = tuple[0]
+                var agent = tuple[1]
                 postMessage({
                     message: Message.diagnosticianWriteOnMam,
-                    agentIndex: a[0],
-                    agent: a[1]
+                    agentIndex: index,
+                    diagnosticianIndex: agent.medicalStatus.certifiedPositiveBy,
+                    diagnosticianSignature: diagnosticians[agent.medicalStatus.certifiedPositiveBy].signature
                 })
-                a[1].medicalStatus.waitMedicalUpdate = false
+                agent.medicalStatus.certifiedPositiveBy = undefined
             })
 
             // Update infection simulation
@@ -133,7 +138,7 @@ onmessage = function(event) {
         var draw = function() {
             var context = canvas.getContext("2d")
             context.clearRect(0, 0, canvas.width, canvas.height)
-            covidCentre.draw(context)
+            diagnosticians.forEach(c => c.draw(context))
             places.forEach(p => p.draw(context))
             agents.forEach(a => a.draw(context))
             context.fillStyle = Colors.text
@@ -151,7 +156,7 @@ onmessage = function(event) {
         postMessage({
             message: Message.initMamChannels,
             agentsNumber: agents.length,
-            diagnostNumber: 1
+            diagnostNumber: diagnosticians.length
         })
 
         // Start the rendering loop
