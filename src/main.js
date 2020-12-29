@@ -6,22 +6,64 @@ import { Seed, MamSettings } from './simulation/constants'
 
 let agentsChannels = []
 let diagnostChannels = []
-let canvas = undefined
-let worker = undefined
-let geosolver = undefined
 
 window.onload = () => {
-    initializeEntities()
-    addGUIEventListeners()
-    
+    var canvas = document.getElementById('scene')
+    var toggle = document.getElementById('toggle')
+    var solver = document.getElementById('solver')
+
+    // Stretch the canvas to the window size
+    canvas.width = window.innerWidth, - 30
+    canvas.height = window.innerHeight - 30
+
+    var webgl = new Worker('./webgl_worker.bundle.js')
+    var geosolver = new Worker('./geosolver.bundle.js')
+    var offscreen = canvas.transferControlToOffscreen()
+
+    // Start WebGL worker
+    webgl.postMessage({message: Message.startWebGLWorker,
+        canvas: offscreen,
+        width: window.innerWidth,
+        height: window.innerHeight,
+        offsetLeft: canvas.offsetLeft,
+        offsetTop: canvas.offsetTop}, [offscreen])    
+
+    // Play/Pause event listener
+    toggle.addEventListener('click', _ => {
+        if (toggle.innerText == 'Pause') {
+            toggle.innerText = 'Play'
+            webgl.postMessage({message: Message.pauseResume})
+        } else {
+            toggle.innerText = 'Pause'
+            webgl.postMessage({message: Message.pauseResume})
+        }
+    })
+
+    // Add event listener to select agents
+    canvas.addEventListener('click', event => { 
+        webgl.postMessage({message: Message.click, 
+            clientX: event.clientX, 
+            clientY: event.clientY})
+    }, false)
+
+    solver.addEventListener('click', _ => {
+        geosolver.postMessage({
+            message: Message.calculatePossibleInfections
+        })
+    })
+
     // GUI worker
-    worker.onmessage = event => {
+    webgl.onmessage = function(event) {
         if (event.data.message == Message.initMamChannels) { 
-            initializeMamChannels(event) 
+            initializeMamChannels(event)
+            geosolver.postMessage({
+                message: "initAgentsChannels",
+                seeds: agentsChannels.map(c => c.mam.getSeed())
+            })
         } else if (event.data.message == Message.agentWriteOnMam) { 
             agentWriteOnMam(event) 
         } else if (event.data.message == Message.diagnosticianWriteOnMam) { 
-            // diagnosticianWriteOnMam(event) 
+            diagnosticianWriteOnMam(event) 
         } else {
             throw new Error('Illegal message for the Web Worker')
         }
@@ -33,55 +75,6 @@ window.onload = () => {
             console.log("Notifications")
         }
     }
-}
-
-function initializeEntities() {
-    // Stretch the canvas to the window size
-    canvas = document.getElementById('scene')
-    var offscreen = canvas.transferControlToOffscreen()
-
-    // GUI Worker & Geosolver Worker
-    worker = new Worker('./webgl_worker.bundle.js')
-    geosolver = new Worker('./geosolver.bundle.js')
-
-    // GUI initialization
-    worker.postMessage({
-        message: Message.startWebGLWorker,
-        canvas: offscreen,
-        width: window.innerWidth,
-        height: window.innerHeight,
-        offsetLeft: canvas.offsetLeft,
-        offsetTop: canvas.offsetTop
-    }, [offscreen])
-}
-
-function addGUIEventListeners() {
-    // Agent selection
-    canvas.addEventListener('click', event => { 
-        worker.postMessage({
-            message: Message.click, 
-            clientX: event.clientX, 
-            clientY: event.clientY
-        })
-    }, false)
-
-    // Play/pause button
-    var playpause = document.getElementById('toggle')
-    playpause.addEventListener('click', _ => {
-        if (playpause.innerText == 'Pause') {
-            playpause.innerText = 'Play'
-            worker.postMessage({message: Message.pause})
-        } else {
-            playpause.innerText = 'Pause'
-            worker.postMessage({message: Message.resume})
-        }
-    })
-
-    // Geosolver button
-    var solver = document.getElementById('solver')
-    solver.addEventListener('click', _ => {
-        geosolver.postMessage({message: Message.calculatePossibleInfections})
-    })
 }
 
 function initializeMamChannels(event) {
@@ -102,10 +95,6 @@ function initializeMamChannels(event) {
             security: new SecurityToolBox()
         })
     }
-    geosolver.postMessage({
-        message: "initAgentsChannels",
-        seeds: agentsChannels.map(c => c.mam.getSeed())
-    })
 }
 
 function agentWriteOnMam(event) {
