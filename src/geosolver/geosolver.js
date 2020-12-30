@@ -1,10 +1,10 @@
 import * as jDBSCAN from 'jdbscan'
 import { SecurityToolBox } from '../iota/security'
 import { Security, Message, MamSettings, Time } from '../simulation/constants'
-import { MamReader } from '../iota/mam_gate'
+import { MamReader, MamWriter } from '../iota/mam_gate'
 
 const infectedId = "infected"
-
+const geosolverPrivateKey = '7KxRgYSISJ7sRUx3pc5hZZ7ptEQ+YPddp6rhC8Y1uUS6FrI7gmApDxI9mqDXFF5jdRJdObU6sXcXxXM5+G3VMQ=='
 export default class GeoSolver {
 	constructor(distance, timeInterval, people=1) {
 		this.dbscanner = jDBSCAN().eps(distance).minPts(people).distance((point1, point2) => {
@@ -14,7 +14,8 @@ export default class GeoSolver {
                 return Number.POSITIVE_INFINITY
 			}
 		})
-		this.securityToolbox = new SecurityToolBox(Security.geosolverPrivatekey)
+		this.securityToolbox = new SecurityToolBox(geosolverPrivateKey)
+		this.mam = new MamWriter(MamSettings.provider, Security.geosolverSeed)
 		this.agentsChannels = undefined
 		this.diagnosticiansChannels = undefined
 		this.agentsCache = new Array()
@@ -39,11 +40,11 @@ export default class GeoSolver {
 		// Remove outliers
 		dataByCluster.shift()
 
-		return new Set(dataByCluster.filter(set => set.has(infectedId))
+		return [...new Set(dataByCluster.filter(set => set.has(infectedId))
 			.flatMap(set => {
 				set.delete(infectedId)
 				return [...set]
-			}))
+			}))]
 	}
 }
 
@@ -61,7 +62,11 @@ onmessage = async event => {
 		const infectedCache = await getInfectedData(currentDate)
 		if (infectedCache.length > 0) {
 			const possibleInfections = geosolver.computePossibleInfections(geosolver.agentsCache.concat(infectedCache))
-			console.log(possibleInfections)
+			
+			await geosolver.mam.publish({
+				possible: possibleInfections
+			}, true)
+			
 			postMessage({message: Message.triggerAgents})
 		}
 	} else {

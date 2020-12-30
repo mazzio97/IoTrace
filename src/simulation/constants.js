@@ -1,3 +1,5 @@
+import { generateSeed } from "../iota/generate"
+
 const placeAlphaChannel = 0.7
 const agentAlphaChannel = 0.7
 const infectionAreaAlphaChannel = 0.2
@@ -40,11 +42,20 @@ const Time = {
 	agentVelocity: 0.5
 }
 
+const Seed = {
+	appId: 'iotrace',
+	agentId: 'agent',
+	diagnostId: 'diagnost',
+	geosolverId: 'geosolver',
+	simId: '0008'
+}
+
+
 const Security = {
 	passwordLength: 1024,
 	passwordCharset: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-	geosolverPrivatekey: '7KxRgYSISJ7sRUx3pc5hZZ7ptEQ+YPddp6rhC8Y1uUS6FrI7gmApDxI9mqDXFF5jdRJdObU6sXcXxXM5+G3VMQ==',
-	geosolverPublicKey: 'uhayO4JgKQ8SPZqg1xReY3USXTm1OrF3F8VzOfht1TE='
+	geosolverPublicKey: 'uhayO4JgKQ8SPZqg1xReY3USXTm1OrF3F8VzOfht1TE=',
+	geosolverSeed: generateSeed(Seed.appId + "-sim" + Seed.simId + "-" + Seed.geosolverId)
 }
 
 const Message = {
@@ -52,20 +63,14 @@ const Message = {
 	pauseResume: 'pauseResume',
 	startWebGLWorker: 'startWebGLWorker',
 	initMamChannels: 'initMamChannels',
-	initAgentChannels: 'initAgentsChannels',
+	initAgentsChannels: 'initAgentsChannels',
 	agentWriteOnMam: 'agentWriteOnMam',
 	diagnosticianWriteOnMam: 'diagnosticianWriteOnMam',
 	getSimulationDateForSolver: 'getSimulationDateForSolver',
 	returnSimulationDateForSolver: 'returnSimulationDateForSolver',
 	calculatePossibleInfections: 'calculatePossibleInfections',
-	triggerAgents: 'triggerAgents'
-}
-
-const Seed = {
-	appId: 'iotrace',
-	agentId: 'agent',
-	diagnostId: 'diagnost',
-	simId: '0006'
+	triggerAgents: 'triggerAgents',
+	checkNotifications: "checkNotifications"
 }
 
 const MamSettings = {

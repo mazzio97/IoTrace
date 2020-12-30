@@ -1,4 +1,4 @@
-import { Colors, Dim, Probabilities, Security, Time } from './constants.js'
+import { Colors, Dim, Probabilities, Seed, Time } from './constants.js'
 import { generateSeed } from '../iota/generate.js'
 
 class Agent {
@@ -22,7 +22,7 @@ class Agent {
         // GUI
         this.selected = false
         this.lastWriting = undefined
-        this.id = generateSeed()
+        this.id = generateSeed(Seed.appId + "-sim" + Seed.simId + '-' + Seed.agentId + this.name) // TODO: Remove the key of the seed, it is only needed for testing
         this.needsToPublish = false
         this.localDim = 2
         this.randomDelay = Math.random() * 10000
@@ -33,10 +33,11 @@ class Agent {
         this.targetY = targetY
     }
 
-    readNotification() {
-        // TODO: read notification blockchain
-        this.state = State.NOTIFIED
-        this.move(this.diagnostician.getRandomX(), this.diagnostician.getRandomY())
+    notify() {
+        if (this.state != State.QUARANTINED) {
+            this.state = State.NOTIFIED
+            this.move(this.diagnostician.getRandomX(), this.diagnostician.getRandomY())
+        }
     }
 
     updatePosition(places, date) {
@@ -56,10 +57,7 @@ class Agent {
             }
         } else if (this.state != State.QUARANTINED && this.diagnostician.checkIn(this.x, this.y)) {
             this.diagnostician.visit(this, date)
-        }
-        
-        // Finally, if the agent is still not quarantined, it can choose a new target with given probability
-        if (this.state != State.QUARANTINED && Math.random() < Probabilities.reachNewTarget) {
+        } else if (this.state != State.QUARANTINED && Math.random() < Probabilities.reachNewTarget) {
             let place = places[Math.floor(places.length * Math.random())]
             this.move(place.getRandomX(), place.getRandomY())
         }

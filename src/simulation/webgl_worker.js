@@ -62,6 +62,15 @@ onmessage = function(event) {
             message: Message.returnSimulationDateForSolver,
             currentDate: date
         })
+    } else if (event.data.message == Message.checkNotifications) {
+        const agent = agents[event.data.index]
+        
+        console.log(agent.id)
+        console.log(event.data.possible)
+
+        if (event.data.possible.includes(agent.id)) {
+            agent.notify()
+        }
     } else if (event.data.message == Message.startWebGLWorker) {
         // Worker initialization
         // List of places

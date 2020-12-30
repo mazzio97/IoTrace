@@ -41,12 +41,16 @@ class Diagnostician extends Place {
 
     // if an agent is infected and not yet quarantined it gets quarantined and the agent is asked to publish on the infected blockchain
     visit(agent, date) {
-        if (agent.state != State.QUARANTINED && agent.medicalStatus.infectionDate !== undefined) {
-            agent.state = State.QUARANTINED
-            if (agent.medicalStatus.certifiedPositiveBy == undefined) {
-                agent.medicalStatus.certifiedPositiveBy = this.id
+        if (agent.state != State.QUARANTINED) {
+            if (agent.medicalStatus.infectionDate !== undefined) {
+                agent.state = State.QUARANTINED
+                if (agent.medicalStatus.certifiedPositiveBy == undefined) {
+                    agent.medicalStatus.certifiedPositiveBy = this.id
+                }
+                agent.medicalStatus.quarantinedDate = new Date(date)
+            } else {
+                agent.state = State.NORMAL
             }
-            agent.medicalStatus.quarantinedDate = new Date(date)
         }
     }
 }

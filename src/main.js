@@ -63,7 +63,7 @@ window.onload = () => {
         if (data.message == Message.initMamChannels) { 
             initializeMamChannels(data.agentsNumber, data.diagnostNumber)
             geosolver.postMessage({
-                message: Message.initAgentChannels,
+                message: Message.initAgentsChannels,
                 agentsSeeds: agentsChannels.map(c => c.mam.getSeed()),
                 diagnosticiansSeeds: diagnostChannels.map(c => c.mam.getSeed())
             })
@@ -85,7 +85,19 @@ window.onload = () => {
     geosolver.onmessage = event => {
         console.log('From Geosolver to Main:', event.data)
         if (event.data.message == Message.triggerAgents) {
-            console.log("Notifications")
+            agentsChannels.forEach(async (a, i) => {
+                const notifications = await a.notifications.read(undefined, true)
+                // TODO: Checksum of all the notifications
+                const possible = [...new Set(
+                    notifications.filter(n => true)
+                        .flatMap(n => n.possible)
+                )]
+                webgl.postMessage({
+                    message: Message.checkNotifications,
+                    index: i,
+                    possible: possible
+                })
+            })
         } else {
             throw new Error('Illegal message from Geosolver to Main')
         }
@@ -99,6 +111,7 @@ function initializeMamChannels(agentsNumber, diagnostNumber) {
             mam: new MamWriter(
                 MamSettings.provider, generateSeed(Seed.appId + "-sim" + Seed.simId + '-' + Seed.agentId + i)
             ),
+            notifications: new MamReader(MamSettings.provider, Security.geosolverSeed),
             security: new SecurityToolBox()
         })
     }
