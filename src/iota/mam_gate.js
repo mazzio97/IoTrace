@@ -15,7 +15,7 @@ class MamWriter {
 		return this.mamState.seed
 	}
 
-	async publish(packet, verbose=true) {
+	async publish(packet, verbose=false) {
 		// Create MAM message as a string of trytes
 		const trytes = asciiToTrytes(JSON.stringify(packet))
 		const message = Mam.create(this.mamState, trytes)

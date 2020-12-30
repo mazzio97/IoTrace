@@ -42,7 +42,7 @@ window.onload = () => {
     })
 
     // Add event listener to select agents
-    canvas.addEventListener('click', event => { 
+    canvas.addEventListener('click', event => {
         webgl.postMessage({
             message: Message.click, 
             clientX: event.clientX, 
@@ -51,8 +51,8 @@ window.onload = () => {
     }, false)
 
     solver.addEventListener('click', _ => {
-        geosolver.postMessage({
-            message: Message.calculatePossibleInfections
+        webgl.postMessage({
+            message: Message.getSimulationDateForSolver
         })
     })
 
@@ -63,7 +63,7 @@ window.onload = () => {
         if (data.message == Message.initMamChannels) { 
             initializeMamChannels(data.agentsNumber, data.diagnostNumber)
             geosolver.postMessage({
-                message: "initAgentsChannels",
+                message: Message.initAgentChannels,
                 agentsSeeds: agentsChannels.map(c => c.mam.getSeed()),
                 diagnosticiansSeeds: diagnostChannels.map(c => c.mam.getSeed())
             })
@@ -71,8 +71,13 @@ window.onload = () => {
             agentWriteOnMam(data.agentIndex, data.agent) 
         } else if (data.message == Message.diagnosticianWriteOnMam) { 
             diagnosticianWriteOnMam(data.agentIndex, data.diagnosticianIndex, data.diagnosticianSignature) 
+        } else if (data.message == Message.returnSimulationDateForSolver) {
+            geosolver.postMessage({
+                message: Message.calculatePossibleInfections,
+                currentDate: data.currentDate
+            })
         } else {
-            throw new Error('Illegal message from the Web Worker')
+            throw new Error('Illegal message from Web Worker to Main')
         }
     }
 
@@ -81,6 +86,8 @@ window.onload = () => {
         console.log('From Geosolver to Main:', event.data)
         if (event.data.message == Message.triggerAgents) {
             console.log("Notifications")
+        } else {
+            throw new Error('Illegal message from Geosolver to Main')
         }
     }
 }
@@ -124,7 +131,7 @@ async function diagnosticianWriteOnMam(agentIndex, diagnosticianIndex, diagnosti
     // Diagnostician writes single transaction with all the data without the id
     diagnostChannels[diagnosticianIndex].mam.publish({
         bundle: payloads.map(p => p.history),
-        agentPublicKey: payloads[0].agentPublicKey,
+        agentPublicKey: agentsChannels[agentIndex].security.keys.publicKey,
         diagnosticianSignature: diagnosticianSignature
     })
 }

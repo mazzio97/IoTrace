@@ -35,6 +35,7 @@ const Time = {
 	clock: timestep,
 	clockScale: 1 * 60 * timestep, // every second in the simulation corresponds to ten minutes
 	writingTime: 10 * 60 * 1000, // agents write every ten (simulated) minutes
+	discardTime: 14 * 24 * 60 * 60, // discard data prior to 14 days (expressed in seconds, not in milliseconds)
 	initialDate: new Date(2020, 2), // initial date of the simulation
 	agentVelocity: 0.5
 }
@@ -51,9 +52,11 @@ const Message = {
 	pauseResume: 'pauseResume',
 	startWebGLWorker: 'startWebGLWorker',
 	initMamChannels: 'initMamChannels',
-	initAgentsChannels: "initAgentsChannels",
+	initAgentChannels: 'initAgentsChannels',
 	agentWriteOnMam: 'agentWriteOnMam',
 	diagnosticianWriteOnMam: 'diagnosticianWriteOnMam',
+	getSimulationDateForSolver: 'getSimulationDateForSolver',
+	returnSimulationDateForSolver: 'returnSimulationDateForSolver',
 	calculatePossibleInfections: 'calculatePossibleInfections',
 	triggerAgents: 'triggerAgents'
 }
