@@ -57,7 +57,12 @@ onmessage = function(event) {
             agents[agentSelected].selected = false
             agentSelected = undefined
         }
-    } else {
+    } else if (event.data.message == Message.getSimulationDateForSolver) {
+        postMessage({
+            message: Message.returnSimulationDateForSolver,
+            currentDate: date
+        })
+    } else if (event.data.message == Message.startWebGLWorker) {
         // Worker initialization
         // List of places
         let radius = 80
@@ -162,5 +167,7 @@ onmessage = function(event) {
         // Start the rendering loop
         draw()
         requestAnimationFrame(render)
+    } else {
+        throw new Error('Illegal message from Main to Web Worker')
     }
 }

@@ -1,9 +1,7 @@
 import * as jDBSCAN from 'jdbscan'
-import { trytesToAscii } from '@iota/converter'
 import { SecurityToolBox } from '../iota/security'
-import { Security, Message, MamSettings } from '../simulation/constants'
+import { Security, Message, MamSettings, Time } from '../simulation/constants'
 import { MamReader } from '../iota/mam_gate'
-import { Time } from '../simulation/constants.js'
 
 export default class GeoSolver {
 	constructor(distance, timeInterval, people=1) {
@@ -34,22 +32,24 @@ const geosolver = new GeoSolver(100, 20)
 onmessage = async event => {
 	const data = event.data
 	console.log('From Main to Geosolver:', data)
-	if (data.message == "initAgentsChannels") {
+	if (data.message == Message.initAgentChannels) {
 		geosolver.agentsChannels = data.agentsSeeds.map(s => new MamReader(MamSettings.provider, s))
 		geosolver.diagnosticiansChannels = data.diagnosticiansSeeds.map(s => new MamReader(MamSettings.provider, s))
-	}
-	if (data.message == Message.calculatePossibleInfections) {
-		await updateAgentData()
-		const infectedCache = await getInfectedData()
+	} else if (data.message == Message.calculatePossibleInfections) {
+		const currentDate = Date.parse(data.currentDate) / 1000
+		await updateAgentData(currentDate)
+		const infectedCache = await getInfectedData(currentDate)
 		if (infectedCache.length > 0) {
 			geosolver.computePossibleInfections(geosolver.agentsCache.concat(infectedCache))
+			postMessage({message: Message.triggerAgents})
 		}
-
-		postMessage({message: Message.triggerAgents})
+	} else {
+		throw new Error('Illegal message from Main to Geosolver')
 	}
 }
 
-async function updateAgentData() {
+async function updateAgentData(currentDate) {
+	// retrieve new data from agents' channels
 	const newData = await Promise.all(geosolver.agentsChannels.map(async mam => {
 		let payloads = await mam.read()
 		payloads = payloads.flatMap(p =>
@@ -61,10 +61,14 @@ async function updateAgentData() {
 		)
 		return payloads
 	}))
-	geosolver.agentsCache = geosolver.agentsCache.concat(newData.flat())
+	// concat the new data in the cache then discard data prior to 14 days ago
+	geosolver.agentsCache = geosolver.agentsCache.concat(newData.flat()).filter(transaction => 
+		currentDate - transaction.date <= Time.discardTime
+	)
 }
 
-async function getInfectedData() {
+async function getInfectedData(currentDate) {
+	// retrieve new data from diagnosticians' channels
 	const newData = await Promise.all(geosolver.diagnosticiansChannels.map(async mam => {
 		let payloads = await mam.read()
 		payloads = payloads.flatMap(p =>
@@ -78,5 +82,6 @@ async function getInfectedData() {
 		)
 		return payloads
 	}))
-	return newData.flat()
+	// discard data prior to 14 days ago
+	return newData.flat().filter(transaction => currentDate - transaction.date <= Time.discardTime)
 }
