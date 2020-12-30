@@ -1,5 +1,6 @@
 import { State } from './agent.js'
 import { Colors } from './constants.js'
+import { generateSeed } from '../iota/generate'
 
 class Place {
     constructor(name, x, y, r) {

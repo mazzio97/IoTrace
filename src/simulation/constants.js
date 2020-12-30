@@ -51,6 +51,7 @@ const Message = {
 	pauseResume: 'pauseResume',
 	startWebGLWorker: 'startWebGLWorker',
 	initMamChannels: 'initMamChannels',
+	initAgentsChannels: "initAgentsChannels",
 	agentWriteOnMam: 'agentWriteOnMam',
 	diagnosticianWriteOnMam: 'diagnosticianWriteOnMam',
 	calculatePossibleInfections: 'calculatePossibleInfections',
@@ -61,7 +62,7 @@ const Seed = {
 	appId: 'iotrace',
 	agentId: 'agent',
 	diagnostId: 'diagnost',
-	simId: '0005'
+	simId: '0006'
 }
 
 const MamSettings = {
