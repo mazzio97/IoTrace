@@ -1,6 +1,6 @@
 import * as jDBSCAN from 'jdbscan'
 import { SecurityToolBox } from '../iota/security'
-import { Security, Message, MamSettings, Time } from '../simulation/constants'
+import { Security, Message, MamSettings, Time, GeoSolverParams } from '../simulation/constants'
 import { MamReader, MamWriter } from '../iota/mam_gate'
 
 const infectedId = "infected"
@@ -48,7 +48,7 @@ export default class GeoSolver {
 	}
 }
 
-const geosolver = new GeoSolver(50, 5000)
+const geosolver = new GeoSolver(GeoSolverParams.distance, GeoSolverParams.timeInterval)
 
 onmessage = async event => {
 	const data = event.data

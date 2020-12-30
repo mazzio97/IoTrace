@@ -77,4 +77,9 @@ const MamSettings = {
 	provider: 'https://nodes.devnet.iota.org'
 }
 
-export { Colors, Dim, Probabilities, Time, Security, Message, Seed, MamSettings }
+const GeoSolverParams = {
+	distance: 50,
+	timeInterval: 5000
+}
+
+export { Colors, Dim, Probabilities, Time, Security, Message, Seed, MamSettings, GeoSolverParams }
