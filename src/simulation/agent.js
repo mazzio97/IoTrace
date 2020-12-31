@@ -24,7 +24,6 @@ class Agent {
         this.lastWriting = undefined
         this.id = generateSeed(Seed.appId + "-sim" + Seed.simId + '-' + Seed.agentId + this.name) // TODO: Remove the key of the seed, it is only needed for testing
         this.needsToPublish = false
-        this.localDim = 2
         this.randomDelay = Math.random() * 10000
     }
 
@@ -61,12 +60,11 @@ class Agent {
             let place = places[Math.floor(places.length * Math.random())]
             this.move(place.getRandomX(), place.getRandomY())
         }
-
-        this.needsToPublish = this.history.length > this.localDim
     }
 
     updateHistory() {
         this.history.push({x: this.x, y: this.y, date: this.lastWriting})
+        this.needsToPublish = this.history.length > Dim.historyDim
     }
 
     clearHistory() {

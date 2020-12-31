@@ -21,11 +21,12 @@ const Colors = {
 
 const Dim = {
 	epsilon: 1, // Minimum distance used to stop agents which have reached their destinations
-	agentRadius: 5,
+	agentRadius: 7,
 	infectionRadius: 30,
 	selectedStrokeWidth: 3,
 	offset: 60,
-	numAgentsEachHouse: 1
+	numAgentsEachHouse: 2,
+	historyDim: 10
 }
 
 const Probabilities = {
@@ -35,9 +36,9 @@ const Probabilities = {
 
 const Time = {
 	clock: timestep,
-	clockScale: 1 * 60 * timestep, // every second in the simulation corresponds to ten minutes
-	writingTime: 10 * 60 * 1000, // agents write every ten (simulated) minutes
-	discardTime: 14 * 24 * 60 * 60, // discard data prior to 14 days (expressed in seconds, not in milliseconds)
+	clockScale: 1 * 60 * timestep, // every second in the simulation corresponds to one minute
+	writingTime: 5 * 60 * 1000, // agents write every five (simulated) minutes
+	discardTime: 6 * 60 * 60, // discard data prior to six (simulated) hours, expressed in seconds
 	initialDate: new Date(2020, 2), // initial date of the simulation
 	agentVelocity: 0.5
 }
@@ -47,7 +48,7 @@ const Seed = {
 	agentId: 'agent',
 	diagnostId: 'diagnost',
 	geosolverId: 'geosolver',
-	simId: '0008'
+	simId: '0017'
 }
 
 
@@ -78,8 +79,8 @@ const MamSettings = {
 }
 
 const GeoSolverParams = {
-	distance: 50,
-	timeInterval: 5000
+	distance: 2 * Dim.infectionRadius,
+	timeInterval: 2 * Time.writingTime / 1000
 }
 
 export { Colors, Dim, Probabilities, Time, Security, Message, Seed, MamSettings, GeoSolverParams }

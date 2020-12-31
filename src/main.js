@@ -70,7 +70,7 @@ window.onload = () => {
         } else if (data.message == Message.agentWriteOnMam) { 
             agentWriteOnMam(data.agentIndex, data.agent) 
         } else if (data.message == Message.diagnosticianWriteOnMam) { 
-            diagnosticianWriteOnMam(data.agentIndex, data.diagnosticianIndex, data.diagnosticianSignature) 
+            diagnosticianWriteOnMam(data.agent, data.agentIndex, data.diagnosticianIndex, data.diagnosticianSignature) 
         } else if (data.message == Message.returnSimulationDateForSolver) {
             geosolver.postMessage({
                 message: Message.calculatePossibleInfections,
@@ -137,7 +137,9 @@ function agentWriteOnMam(agentIndex, agent) {
     })
 }
 
-async function diagnosticianWriteOnMam(agentIndex, diagnosticianIndex, diagnosticianSignature) {
+async function diagnosticianWriteOnMam(agent, agentIndex, diagnosticianIndex, diagnosticianSignature) {
+    // Agent publishes cached history
+    agentWriteOnMam(agentIndex, agent)
     // Diagnostician reads agents' transactions from their mam channel
     let mam = new MamReader(MamSettings.provider, agentsChannels[agentIndex].mam.getSeed())
     let payloads = await mam.read()

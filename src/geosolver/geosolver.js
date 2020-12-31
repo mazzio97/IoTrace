@@ -60,7 +60,10 @@ onmessage = async event => {
 		const currentDate = Date.parse(data.currentDate) / 1000
 		await updateAgentData(currentDate)
 		const infectedCache = await getInfectedData(currentDate)
+
+		console.log('')
 		if (infectedCache.length > 0) {
+			console.log('GEOSOLVER: Computing Infections...')
 			const possibleInfections = geosolver.computePossibleInfections(geosolver.agentsCache.concat(infectedCache))
 			
 			await geosolver.mam.publish({

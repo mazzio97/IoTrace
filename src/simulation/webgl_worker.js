@@ -117,10 +117,12 @@ onmessage = function(event) {
                 var agent = tuple[1]
                 postMessage({
                     message: Message.diagnosticianWriteOnMam,
+                    agent: agent,
                     agentIndex: index,
                     diagnosticianIndex: agent.medicalStatus.certifiedPositiveBy,
                     diagnosticianSignature: diagnosticians[agent.medicalStatus.certifiedPositiveBy].signature
                 })
+                agent.clearHistory()
                 agent.medicalStatus.certifiedPositiveBy = undefined
             })
 
@@ -156,7 +158,7 @@ onmessage = function(event) {
             places.forEach(p => p.draw(context))
             agents.forEach(a => a.draw(context))
             context.fillStyle = Colors.text
-            context.fillText(date.toLocaleString(), canvas.width / 2, canvas.height - 10);
+            context.fillText(date.toLocaleTimeString(), canvas.width / 2, canvas.height - 10);
         }
     
         function render(time) {
