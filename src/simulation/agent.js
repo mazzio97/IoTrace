@@ -22,7 +22,7 @@ class Agent {
         // GUI
         this.selected = false
         this.lastWriting = undefined
-        this.id = generateSeed(Seed.appId + "-sim" + Seed.simId + '-' + Seed.agentId + this.name) // TODO: Remove the key of the seed, it is only needed for testing
+        this.id = generateSeed(Seed.appId + "-sim" + Seed.simId + '-' + Seed.agentId + this.name)
         this.needsToPublish = false
         this.randomDelay = Math.random() * 10000
     }

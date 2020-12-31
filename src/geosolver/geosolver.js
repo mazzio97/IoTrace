@@ -22,7 +22,6 @@ export default class GeoSolver {
 	}
 
 	computePossibleInfections(data) {
-		console.log(data)
 		const scan = this.dbscanner.data(data)
 		var pointAssignment = scan()
 		const clusteredData = data.map((d, i) => {
@@ -60,17 +59,27 @@ onmessage = async event => {
 		const currentDate = Date.parse(data.currentDate) / 1000
 		await updateAgentData(currentDate)
 		const infectedCache = await getInfectedData(currentDate)
-
-		console.log('')
+		console.log('GEOSOLVER: found', infectedCache.length, 'new infected transactions')
 		if (infectedCache.length > 0) {
-			console.log('GEOSOLVER: Computing Infections...')
+			console.log('GEOSOLVER: computing on', geosolver.agentsCache.length + infectedCache.length, 'transactions')
 			const possibleInfections = geosolver.computePossibleInfections(geosolver.agentsCache.concat(infectedCache))
-			
-			await geosolver.mam.publish({
-				possible: possibleInfections
-			}, true)
-			
-			postMessage({message: Message.triggerAgents})
+			console.log('GEOSOLVER: found', possibleInfections.length, 'new possible infected, check at', geosolver.mam.startRoot)
+			if (possibleInfections.length > 0) {
+				const cyphertext = geosolver.securityToolbox.encryptMessage(
+					'checksum', geosolver.securityToolbox.keys.publicKey
+				)
+				await geosolver.mam.publish({
+					possible: possibleInfections,
+					checksum: {
+						cyphertext: cyphertext,
+						signature: geosolver.securityToolbox.signMessage(cyphertext),
+						key: geosolver.securityToolbox.keys.publicKey
+					}
+				})
+				
+				
+				postMessage({message: Message.triggerAgents})
+			}
 		}
 	} else {
 		throw new Error('Illegal message from Main to Geosolver')
@@ -80,14 +89,21 @@ onmessage = async event => {
 async function updateAgentData(currentDate) {
 	// retrieve new data from agents' channels
 	const newData = await Promise.all(geosolver.agentsChannels.map(async mam => {
+		let previousRoot = mam.currentRoot
 		let payloads = await mam.read()
-		payloads = payloads.flatMap(p =>
-			JSON.parse(geosolver.securityToolbox.decryptMessage(p.history, p.agentPublicKey)).map(transaction => {
-				transaction.id = p.id
-				transaction.date = Date.parse(transaction.date) / 1000
-				return transaction
-			})
-		)
+		payloads = payloads.flatMap(p => {
+			const c = p.checksum
+			if (SecurityToolBox.verifyMessage(c.cyphertext, c.signature, c.key)) {
+				return JSON.parse(geosolver.securityToolbox.decryptMessage(p.history, p.agentPublicKey)).map(transaction => {
+					transaction.id = p.id
+					transaction.date = Date.parse(transaction.date) / 1000
+					return transaction
+				})
+			} else {
+				console.log('CHECKSUM ERROR:', previousRoot)
+				return []
+			}
+		})
 		return payloads
 	}))
 	// concat the new data in the cache then discard data prior to 14 days ago
@@ -99,16 +115,23 @@ async function updateAgentData(currentDate) {
 async function getInfectedData(currentDate) {
 	// retrieve new data from diagnosticians' channels
 	const newData = await Promise.all(geosolver.diagnosticiansChannels.map(async mam => {
+		let previousRoot = mam.currentRoot
 		let payloads = await mam.read()
-		payloads = payloads.flatMap(p =>
-			p.bundle.flatMap(history => 
-				JSON.parse(geosolver.securityToolbox.decryptMessage(history, p.agentPublicKey)).map(transaction => {
-					transaction.id = infectedId
-					transaction.date = Date.parse(transaction.date) / 1000
-					return transaction
-				})
-			)
-		)
+		payloads = payloads.flatMap(p => {
+			const c = p.checksum
+			if (SecurityToolBox.verifyMessage(c.cyphertext, c.signature, c.key)) {
+				return p.bundle.flatMap(history => 
+					JSON.parse(geosolver.securityToolbox.decryptMessage(history, p.agentPublicKey)).map(transaction => {
+						transaction.id = infectedId
+						transaction.date = Date.parse(transaction.date) / 1000
+						return transaction
+					})
+				)
+			} else {
+				console.log('CHECKSUM ERROR:', previousRoot)
+				return []
+			}
+		})
 		return payloads
 	}))
 	// discard data prior to 14 days ago

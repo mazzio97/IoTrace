@@ -36,7 +36,6 @@ class Diagnostician extends Place {
     constructor(id, x, y, r) {
         super('Diagnostician', x, y, r)
         this.id = id
-        this.signature = generateSeed()
     }
 
     // if an agent is infected and not yet quarantined it gets quarantined and the agent is asked to publish on the infected blockchain

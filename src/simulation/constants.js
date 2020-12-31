@@ -48,7 +48,7 @@ const Seed = {
 	agentId: 'agent',
 	diagnostId: 'diagnost',
 	geosolverId: 'geosolver',
-	simId: '0017'
+	simId: '0027'
 }
 
 

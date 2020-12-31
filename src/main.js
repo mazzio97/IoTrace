@@ -70,7 +70,7 @@ window.onload = () => {
         } else if (data.message == Message.agentWriteOnMam) { 
             agentWriteOnMam(data.agentIndex, data.agent) 
         } else if (data.message == Message.diagnosticianWriteOnMam) { 
-            diagnosticianWriteOnMam(data.agent, data.agentIndex, data.diagnosticianIndex, data.diagnosticianSignature) 
+            diagnosticianWriteOnMam(data.agent, data.agentIndex, data.diagnosticianIndex) 
         } else if (data.message == Message.returnSimulationDateForSolver) {
             geosolver.postMessage({
                 message: Message.calculatePossibleInfections,
@@ -86,11 +86,18 @@ window.onload = () => {
         console.log('From Geosolver to Main:', event.data)
         if (event.data.message == Message.triggerAgents) {
             agentsChannels.forEach(async (a, i) => {
-                const notifications = await a.notifications.read(undefined, true)
-                // TODO: Checksum of all the notifications
+                let previousRoot = a.notifications.currentRoot
+                const payloads = await a.notifications.read()
                 const possible = [...new Set(
-                    notifications.filter(n => true)
-                        .flatMap(n => n.possible)
+                    payloads.flatMap(p => {
+                        const c = p.checksum
+			            if (SecurityToolBox.verifyMessage(c.cyphertext, c.signature, c.key)) {
+                            return p.possible
+                        } else {
+                            console.log('CHECKSUM ERROR:', previousRoot)
+                            return []
+                        }
+                    })
                 )]
                 webgl.postMessage({
                     message: Message.checkNotifications,
@@ -118,35 +125,52 @@ function initializeMamChannels(agentsNumber, diagnostNumber) {
     for (const i of Array(diagnostNumber).keys()) {
         diagnostChannels.push({
             mam: new MamWriter(
-                MamSettings.provider, generateSeed(Seed.agentId + "-sim" + Seed.simId + '-' + Seed.diagnostId + i)
+                MamSettings.provider, generateSeed(Seed.appId + "-sim" + Seed.simId + '-' + Seed.diagnostId + i)
             ),
             security: new SecurityToolBox()
         })
     }
+    console.log('AGENTS\' ROOTS:', agentsChannels.map(c => c.mam.startRoot))
+    console.log('DIAGNOSTICIANS\' ROOTS:', diagnostChannels.map(c => c.mam.startRoot))
 }
 
-function agentWriteOnMam(agentIndex, agent) {
+async function agentWriteOnMam(agentIndex, agent) {
+    let cyphertext = agentsChannels[agentIndex].security.encryptMessage(
+        'checksum', agentsChannels[agentIndex].security.keys.publicKey
+    )
     // Agent writing on Mam
-    agentsChannels[agentIndex].mam.publish({
+    await agentsChannels[agentIndex].mam.publish({
         id: agent.id,
+        agentPublicKey: agentsChannels[agentIndex].security.keys.publicKey,
         history: agentsChannels[agentIndex].security.encryptMessage(
             JSON.stringify(agent.history),
             Security.geosolverPublicKey
         ),
-        agentPublicKey: agentsChannels[agentIndex].security.keys.publicKey
+        checksum: {
+            cyphertext: cyphertext,
+            signature: agentsChannels[agentIndex].security.signMessage(cyphertext),
+            key: agentsChannels[agentIndex].security.keys.publicKey,
+        },
     })
 }
 
-async function diagnosticianWriteOnMam(agent, agentIndex, diagnosticianIndex, diagnosticianSignature) {
+async function diagnosticianWriteOnMam(agent, agentIndex, diagnosticianIndex) {
     // Agent publishes cached history
-    agentWriteOnMam(agentIndex, agent)
+    await agentWriteOnMam(agentIndex, agent)
     // Diagnostician reads agents' transactions from their mam channel
     let mam = new MamReader(MamSettings.provider, agentsChannels[agentIndex].mam.getSeed())
     let payloads = await mam.read()
+    let cyphertext = diagnostChannels[diagnosticianIndex].security.encryptMessage(
+        'checksum', diagnostChannels[diagnosticianIndex].security.keys.publicKey
+    )
     // Diagnostician writes single transaction with all the data without the id
     diagnostChannels[diagnosticianIndex].mam.publish({
         bundle: payloads.map(p => p.history),
         agentPublicKey: agentsChannels[agentIndex].security.keys.publicKey,
-        diagnosticianSignature: diagnosticianSignature
+        checksum: {
+            cyphertext: cyphertext,
+            signature: diagnostChannels[diagnosticianIndex].security.signMessage(cyphertext),
+            key: diagnostChannels[diagnosticianIndex].security.keys.publicKey
+        }
     })
 }

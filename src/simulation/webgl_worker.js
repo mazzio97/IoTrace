@@ -64,10 +64,6 @@ onmessage = function(event) {
         })
     } else if (event.data.message == Message.checkNotifications) {
         const agent = agents[event.data.index]
-        
-        console.log(agent.id)
-        console.log(event.data.possible)
-
         if (event.data.possible.includes(agent.id)) {
             agent.notify()
         }
@@ -119,8 +115,7 @@ onmessage = function(event) {
                     message: Message.diagnosticianWriteOnMam,
                     agent: agent,
                     agentIndex: index,
-                    diagnosticianIndex: agent.medicalStatus.certifiedPositiveBy,
-                    diagnosticianSignature: diagnosticians[agent.medicalStatus.certifiedPositiveBy].signature
+                    diagnosticianIndex: agent.medicalStatus.certifiedPositiveBy
                 })
                 agent.clearHistory()
                 agent.medicalStatus.certifiedPositiveBy = undefined
