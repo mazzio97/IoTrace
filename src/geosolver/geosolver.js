@@ -15,6 +15,7 @@ export default class GeoSolver {
 			}
 		})
 		this.securityToolbox = new SecurityToolBox(geosolverPrivateKey)
+		this.notificationToolbox = new SecurityToolBox(Security.notificationKey) // shared toolbox to allow one-to-many encrpytion
 		this.mam = new MamWriter(MamSettings.provider, Security.geosolverSeed)
 		this.agentsChannels = undefined
 		this.diagnosticiansChannels = undefined
@@ -53,6 +54,7 @@ onmessage = async event => {
 	const data = event.data
 	console.log('From Main to Geosolver:', data)
 	if (data.message == Message.initAgentsChannels) {
+		console.log('GEOSOLVER\'S ROOT:', new Array(geosolver.mam.startRoot))
 		geosolver.agentsChannels = data.agentsSeeds.map(s => new MamReader(MamSettings.provider, s))
 		geosolver.diagnosticiansChannels = data.diagnosticiansSeeds.map(s => new MamReader(MamSettings.provider, s))
 	} else if (data.message == Message.calculatePossibleInfections) {
@@ -66,18 +68,14 @@ onmessage = async event => {
 			console.log('GEOSOLVER: found', possibleInfections.length, 'new possible infected, check at', geosolver.mam.startRoot)
 			if (possibleInfections.length > 0) {
 				const cyphertext = geosolver.securityToolbox.encryptMessage(
-					'checksum', geosolver.securityToolbox.keys.publicKey
+					JSON.stringify(possibleInfections),
+					geosolver.notificationToolbox.keys.publicKey
 				)
 				await geosolver.mam.publish({
-					possible: possibleInfections,
-					checksum: {
-						cyphertext: cyphertext,
-						signature: geosolver.securityToolbox.signMessage(cyphertext),
-						key: geosolver.securityToolbox.keys.publicKey
-					}
+					cyphertext: cyphertext,
+					publicKey: geosolver.securityToolbox.keys.publicKey,
+					signature: geosolver.securityToolbox.signMessage(cyphertext)
 				})
-				
-				
 				postMessage({message: Message.triggerAgents})
 			}
 		}
@@ -91,18 +89,22 @@ async function updateAgentData(currentDate) {
 	const newData = await Promise.all(geosolver.agentsChannels.map(async mam => {
 		let previousRoot = mam.currentRoot
 		let payloads = await mam.read()
-		payloads = payloads.flatMap(p => {
-			const c = p.checksum
-			if (SecurityToolBox.verifyMessage(c.cyphertext, c.signature, c.key)) {
-				return JSON.parse(geosolver.securityToolbox.decryptMessage(p.history, p.agentPublicKey)).map(transaction => {
-					transaction.id = p.id
-					transaction.date = Date.parse(transaction.date) / 1000
-					return transaction
-				})
+		payloads = payloads.filter(p => {
+			// verify agent's transactions
+			if (SecurityToolBox.verifyMessage(p.cyphertext, p.signature, p.publicKey)) {
+				return true
 			} else {
-				console.log('CHECKSUM ERROR:', previousRoot)
+				console.error('CHECKSUM ERROR:', previousRoot)
 				return []
 			}
+		}).flatMap(p => {
+			// decrypt agent's transactions
+			const history = JSON.parse(geosolver.securityToolbox.decryptMessage(p.cyphertext, p.publicKey))
+			return history.map(transaction => {
+				transaction.id = p.id
+				transaction.date = Date.parse(transaction.date) / 1000
+				return transaction
+			})
 		})
 		return payloads
 	}))
@@ -117,23 +119,31 @@ async function getInfectedData(currentDate) {
 	const newData = await Promise.all(geosolver.diagnosticiansChannels.map(async mam => {
 		let previousRoot = mam.currentRoot
 		let payloads = await mam.read()
-		payloads = payloads.flatMap(p => {
-			const c = p.checksum
-			if (SecurityToolBox.verifyMessage(c.cyphertext, c.signature, c.key)) {
-				return p.bundle.flatMap(history => 
-					JSON.parse(geosolver.securityToolbox.decryptMessage(history, p.agentPublicKey)).map(transaction => {
-						transaction.id = infectedId
-						transaction.date = Date.parse(transaction.date) / 1000
-						return transaction
-					})
-				)
+		payloads = payloads.filter(p => {
+			// verify diagnostician's transactions
+			if (SecurityToolBox.verifyMessage(p.cyphertext, p.signature, p.publicKey)) {
+				return true
 			} else {
-				console.log('CHECKSUM ERROR:', previousRoot)
-				return []
+				console.error('CHECKSUM ERROR:', previousRoot)
+				return false
 			}
+		}).flatMap(p => {
+			// decrypt diagnostician's transactions
+			const bundle = JSON.parse(geosolver.securityToolbox.decryptMessage(p.cyphertext, p.publicKey))
+			const agentPublicKey = bundle.publicKey
+			return bundle.cyphertexts.flatMap(cyphertext => {
+				// decrypt agent's transactions (no need to verify them as they've been verified by the diagnostician)
+				const history = JSON.parse(geosolver.securityToolbox.decryptMessage(cyphertext, agentPublicKey))
+				return history.map(transaction => {
+					transaction.id = infectedId
+					transaction.date = Date.parse(transaction.date) / 1000
+					return transaction
+				})
+			})
 		})
 		return payloads
 	}))
+	console.log(newData.flat())
 	// discard data prior to 14 days ago
 	return newData.flat().filter(transaction => currentDate - transaction.date <= Time.discardTime)
 }

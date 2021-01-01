@@ -88,21 +88,24 @@ window.onload = () => {
             agentsChannels.forEach(async (a, i) => {
                 let previousRoot = a.notifications.currentRoot
                 const payloads = await a.notifications.read()
-                const possible = [...new Set(
-                    payloads.flatMap(p => {
-                        const c = p.checksum
-			            if (SecurityToolBox.verifyMessage(c.cyphertext, c.signature, c.key)) {
-                            return p.possible
-                        } else {
-                            console.log('CHECKSUM ERROR:', previousRoot)
-                            return []
-                        }
-                    })
-                )]
+                const possible = payloads.filter(p => {
+                    // verify geosolver's transactions
+                    if (SecurityToolBox.verifyMessage(p.cyphertext, p.signature, p.publicKey)) {
+                        return true
+                    } else {
+                        console.error('CHECKSUM ERROR:', previousRoot)
+                        return false
+                    }
+                }).flatMap(p => {
+                    // decrypt geosolver's transaction (using the shared toolbox)
+                    const possibleInfections = JSON.parse(a.notificationsToolbox.decryptMessage(p.cyphertext, p.publicKey))
+                    return possibleInfections
+                })
+
                 webgl.postMessage({
                     message: Message.checkNotifications,
                     index: i,
-                    possible: possible
+                    possible: [...new Set(possible)]
                 })
             })
         } else {
@@ -118,8 +121,9 @@ function initializeMamChannels(agentsNumber, diagnostNumber) {
             mam: new MamWriter(
                 MamSettings.provider, generateSeed(Seed.appId + "-sim" + Seed.simId + '-' + Seed.agentId + i)
             ),
+            security: new SecurityToolBox(),
             notifications: new MamReader(MamSettings.provider, Security.geosolverSeed),
-            security: new SecurityToolBox()
+            notificationsToolbox: new SecurityToolBox(Security.notificationKey) // shared toolbox to allow one-to-many encrpytion
         })
     }
     for (const i of Array(diagnostNumber).keys()) {
@@ -135,22 +139,16 @@ function initializeMamChannels(agentsNumber, diagnostNumber) {
 }
 
 async function agentWriteOnMam(agentIndex, agent) {
-    let cyphertext = agentsChannels[agentIndex].security.encryptMessage(
-        'checksum', agentsChannels[agentIndex].security.keys.publicKey
+    // The messages posted by the agents are their histories
+    const cyphertext = agentsChannels[agentIndex].security.encryptMessage(
+        JSON.stringify(agent.history),
+        Security.geosolverPublicKey
     )
-    // Agent writing on Mam
     await agentsChannels[agentIndex].mam.publish({
         id: agent.id,
-        agentPublicKey: agentsChannels[agentIndex].security.keys.publicKey,
-        history: agentsChannels[agentIndex].security.encryptMessage(
-            JSON.stringify(agent.history),
-            Security.geosolverPublicKey
-        ),
-        checksum: {
-            cyphertext: cyphertext,
-            signature: agentsChannels[agentIndex].security.signMessage(cyphertext),
-            key: agentsChannels[agentIndex].security.keys.publicKey,
-        },
+        cyphertext: cyphertext,
+        publicKey: agentsChannels[agentIndex].security.keys.publicKey,
+        signature: agentsChannels[agentIndex].security.signMessage(cyphertext)
     })
 }
 
@@ -158,19 +156,27 @@ async function diagnosticianWriteOnMam(agent, agentIndex, diagnosticianIndex) {
     // Agent publishes cached history
     await agentWriteOnMam(agentIndex, agent)
     // Diagnostician reads agents' transactions from their mam channel
-    let mam = new MamReader(MamSettings.provider, agentsChannels[agentIndex].mam.getSeed())
-    let payloads = await mam.read()
-    let cyphertext = diagnostChannels[diagnosticianIndex].security.encryptMessage(
-        'checksum', diagnostChannels[diagnosticianIndex].security.keys.publicKey
+    const mam = new MamReader(MamSettings.provider, agentsChannels[agentIndex].mam.getSeed())
+    const payloads = await mam.read()
+    // The messages posted by the diagnosticians are the array of agent's histories without the id, plus the agent's key
+    const cyphertext = diagnostChannels[diagnosticianIndex].security.encryptMessage(
+        JSON.stringify({
+            cyphertexts: payloads.filter(p => {
+                // verify agent's transactions but do not decrypt them (this will be done by the geosolver)
+                if (SecurityToolBox.verifyMessage(p.cyphertext, p.signature, p.publicKey)) {
+                    return true
+                } else {
+                    console.error('CHECKSUM ERROR:', mam.startRoot)
+                    return false
+                }
+            }).map(p => p.cyphertext),
+            publicKey: agentsChannels[agentIndex].security.keys.publicKey
+        }),
+        Security.geosolverPublicKey
     )
-    // Diagnostician writes single transaction with all the data without the id
     diagnostChannels[diagnosticianIndex].mam.publish({
-        bundle: payloads.map(p => p.history),
-        agentPublicKey: agentsChannels[agentIndex].security.keys.publicKey,
-        checksum: {
-            cyphertext: cyphertext,
-            signature: diagnostChannels[diagnosticianIndex].security.signMessage(cyphertext),
-            key: diagnostChannels[diagnosticianIndex].security.keys.publicKey
-        }
+        cyphertext: cyphertext,
+        publicKey: diagnostChannels[diagnosticianIndex].security.keys.publicKey,
+        signature: diagnostChannels[diagnosticianIndex].security.signMessage(cyphertext)
     })
 }

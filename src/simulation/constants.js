@@ -48,7 +48,7 @@ const Seed = {
 	agentId: 'agent',
 	diagnostId: 'diagnost',
 	geosolverId: 'geosolver',
-	simId: '0027'
+	simId: '0029'
 }
 
 
@@ -56,7 +56,8 @@ const Security = {
 	passwordLength: 1024,
 	passwordCharset: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
 	geosolverPublicKey: 'uhayO4JgKQ8SPZqg1xReY3USXTm1OrF3F8VzOfht1TE=',
-	geosolverSeed: generateSeed(Seed.appId + "-sim" + Seed.simId + "-" + Seed.geosolverId)
+	geosolverSeed: generateSeed(Seed.appId + "-sim" + Seed.simId + "-" + Seed.geosolverId),
+	notificationKey: 'Blov0GwUZDfFctT0TPG4PUr48TWv6AZsP2m3HWpIY34CmNrV1yrwYHS4hDfZTH5jYbGg45vnYxjMAZFO3WNkgA=='
 }
 
 const Message = {
