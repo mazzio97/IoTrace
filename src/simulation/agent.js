@@ -41,7 +41,8 @@ class Agent {
 
     updatePosition(places, date) {
         // If targetX is present, the agent moves towards the target
-        // Otherwise, if any (not quarantined) agent reaches the covid center, it gets a visit
+        // On the contrary, if the agent is not quarantined can do something else
+        // Otherwise the agent stays still
         if (this.targetX != undefined) {
             var deltaX = (this.targetX - this.x)
             var deltaY = (this.targetY - this.y)
@@ -54,11 +55,29 @@ class Agent {
                 this.x = this.x + deltaX * Time.agentVelocity / length      
                 this.y = this.y + deltaY * Time.agentVelocity / length
             }
-        } else if (this.state != State.QUARANTINED && this.diagnostician.checkIn(this.x, this.y)) {
-            this.diagnostician.visit(this, date)
-        } else if (this.state != State.QUARANTINED && Math.random() < Probabilities.reachNewTarget) {
-            let place = places[Math.floor(places.length * Math.random())]
-            this.move(place.getRandomX(), place.getRandomY())
+        } else if (this.state != State.QUARANTINED) {
+            // If the target reached is the diagnostician, the agent gets visited and (if not quarantined) chooses another target
+            // On the contrary, if the target was a different place and the agent decides to move, another target is chosen
+            // Otherwise the agent stays still
+            if (this.diagnostician.checkIn(this.x, this.y)) {
+                this.diagnostician.visit(this, date)
+                if (this.state == State.QUARANTINED) {
+                    this.targetX = undefined
+                    this.targetY = undefined
+                } else {
+                    let place = places[Math.floor(places.length * Math.random())]
+                    this.move(place.getRandomX(), place.getRandomY())
+                }
+            } else if (Math.random() < Probabilities.reachNewTarget) {
+                let place = undefined
+                // with a given probability, the new target will be the diagnostician
+                if (Math.random() < Probabilities.randomScreening) {
+                    place = this.diagnostician
+                } else {
+                    place = places[Math.floor(places.length * Math.random())]
+                }
+                this.move(place.getRandomX(), place.getRandomY())
+            }
         }
     }
 

@@ -54,7 +54,7 @@ onmessage = async event => {
 	const data = event.data
 	console.log('From Main to Geosolver:', data)
 	if (data.message == Message.initAgentsChannels) {
-		console.log('GEOSOLVER\'S ROOT:', new Array(geosolver.mam.startRoot))
+		console.log('GEOSOLVER\'S ROOT:', geosolver.mam.startRoot)
 		geosolver.agentsChannels = data.agentsSeeds.map(s => new MamReader(MamSettings.provider, s))
 		geosolver.diagnosticiansChannels = data.diagnosticiansSeeds.map(s => new MamReader(MamSettings.provider, s))
 	} else if (data.message == Message.calculatePossibleInfections) {
@@ -143,7 +143,6 @@ async function getInfectedData(currentDate) {
 		})
 		return payloads
 	}))
-	console.log(newData.flat())
 	// discard data prior to 14 days ago
 	return newData.flat().filter(transaction => currentDate - transaction.date <= Time.discardTime)
 }

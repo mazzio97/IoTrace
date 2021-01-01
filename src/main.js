@@ -1,6 +1,6 @@
 import { generateSeed } from './iota/generate.js'
 import { MamReader, MamWriter } from './iota/mam_gate.js'
-import { Message, Security } from '../src/simulation/constants.js'
+import { Time, Message, Security } from '../src/simulation/constants.js'
 import { SecurityToolBox } from './iota/security.js'
 import { Seed, MamSettings } from './simulation/constants'
 
@@ -10,8 +10,7 @@ let diagnostChannels = []
 window.onload = () => {
     var canvas = document.getElementById('scene')
     var toggle = document.getElementById('toggle')
-    var solver = document.getElementById('solver')
-
+    
     // Stretch the canvas to the window size
     canvas.width = window.innerWidth, - 30
     canvas.height = window.innerHeight - 30
@@ -19,6 +18,18 @@ window.onload = () => {
     var webgl = new Worker('./webgl_worker.bundle.js')
     var geosolver = new Worker('./geosolver.bundle.js')
     var offscreen = canvas.transferControlToOffscreen()
+
+    function runSolver() {
+        // if the simulation is still playing (i.e., the toogle has the text 'Pause')
+        if (toggle.innerText == 'Pause') {
+            // activates the routines for the solver
+            webgl.postMessage({
+                message: Message.getSimulationDateForSolver
+            })
+            // sets the timeout to let the solver run again
+            setTimeout(runSolver, Time.solverUpdateTime)
+        }
+    }
 
     // Start WebGL worker
     webgl.postMessage({
@@ -38,6 +49,7 @@ window.onload = () => {
         } else {
             toggle.innerText = 'Pause'
             webgl.postMessage({message: Message.pauseResume})
+            runSolver() // as soon as the simulation is played, the solver is run
         }
     })
 
@@ -49,12 +61,6 @@ window.onload = () => {
             clientY: event.clientY
         })
     }, false)
-
-    solver.addEventListener('click', _ => {
-        webgl.postMessage({
-            message: Message.getSimulationDateForSolver
-        })
-    })
 
     // GUI worker
     webgl.onmessage = event => {
