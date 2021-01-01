@@ -73,7 +73,7 @@ window.onload = () => {
                 agentsSeeds: agentsChannels.map(c => c.mam.getSeed()),
                 diagnosticiansSeeds: diagnostChannels.map(c => c.mam.getSeed())
             })
-        } else if (data.message == Message.agentWriteOnMam) { 
+        } else if (data.message == Message.agentWriteOnMam) {
             agentWriteOnMam(data.agentIndex, data.agent) 
         } else if (data.message == Message.diagnosticianWriteOnMam) { 
             diagnosticianWriteOnMam(data.agent, data.agentIndex, data.diagnosticianIndex) 

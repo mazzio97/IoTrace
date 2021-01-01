@@ -82,8 +82,11 @@ class Agent {
     }
 
     updateHistory() {
-        this.history.push({x: this.x, y: this.y, date: this.lastWriting})
-        this.needsToPublish = this.history.length > Dim.historyDim
+        // non-quarantined agents only push their history
+        if (this.state != State.QUARANTINED) {
+            this.history.push({x: this.x, y: this.y, date: this.lastWriting})
+            this.needsToPublish = this.history.length > Dim.historyDim    
+        }
     }
 
     clearHistory() {
