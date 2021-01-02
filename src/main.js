@@ -140,8 +140,13 @@ function initializeMamChannels(agentsNumber, diagnostNumber) {
             security: new SecurityToolBox()
         })
     }
-    console.log('AGENTS\' ROOTS:', agentsChannels.map(c => c.mam.startRoot))
-    console.log('DIAGNOSTICIANS\' ROOTS:', diagnostChannels.map(c => c.mam.startRoot))
+    // print mam channels inspector
+    agentsChannels.forEach((c, i) => 
+        console.log('AGENT ' + i + ': https://explorer.iota.org/devnet/streams/0/' + c.mam.startRoot + '/public')
+    )
+    diagnostChannels.forEach((c, i) => 
+        console.log('DIAGNOSTICIAN ' + i + ': https://explorer.iota.org/devnet/streams/0/' + c.mam.startRoot + '/public')
+    )
 }
 
 async function agentWriteOnMam(agentIndex, agent) {

@@ -40,7 +40,7 @@ const Time = {
 	clockScale: 1 * 60 * timestep, // every second in the simulation corresponds to one minute
 	solverUpdateTime: 30 * 1000, // solver updates every thirty (real) seconds
 	writingTime: 5 * 60 * 1000, // agents write every five (simulated) minutes
-	discardTime: 6 * 60 * 60, // discard data prior to six (simulated) hours, expressed in seconds
+	discardTime: 3 * 60 * 60, // discard data prior to three (simulated) hours, expressed in seconds
 	initialDate: new Date(2020, 2), // initial date of the simulation
 	agentVelocity: 0.5
 }
@@ -50,7 +50,7 @@ const Seed = {
 	agentId: 'agent',
 	diagnostId: 'diagnost',
 	geosolverId: 'geosolver',
-	simId: '0039'
+	simId: '0040'
 }
 
 

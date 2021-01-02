@@ -54,7 +54,7 @@ onmessage = async event => {
 	const data = event.data
 	console.log('From Main to Geosolver:', data)
 	if (data.message == Message.initAgentsChannels) {
-		console.log('GEOSOLVER\'S ROOT:', geosolver.mam.startRoot)
+        console.log('GEOSOLVER: https://explorer.iota.org/devnet/streams/0/' + geosolver.mam.startRoot + '/public')
 		geosolver.agentsChannels = data.agentsSeeds.map(s => new MamReader(MamSettings.provider, s))
 		geosolver.diagnosticiansChannels = data.diagnosticiansSeeds.map(s => new MamReader(MamSettings.provider, s))
 	} else if (data.message == Message.calculatePossibleInfections) {
