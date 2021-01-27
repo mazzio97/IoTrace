@@ -1,0 +1,48 @@
+\documentclass[9pt]{beamer}
+
+\input{utils.tex}
+
+\mode<presentation> {
+    \usetheme{Boadilla}
+    \usecolortheme{beaver}
+}
+
+\title[IoTrace]{
+    \Large{IoTrace}
+}
+
+\subtitle{A contact tracing app built using IOTA}
+
+\author[L. Giuliani, A. Lombardi, D. Mazzieri]{
+    Luca Giuliani, Alessandro Lombardi, Diego Mazzieri
+}
+
+\institute[]{Alma Mater Studiorum $\cdot$ Università di Bologna}
+
+\date{\today}
+
+% 
+
+\begin{document}
+    \begin{frame}[noframenumbering, plain]
+        \titlepage
+    \end{frame}
+    
+    \sec{Introduction}
+    \slds{intro-beeptrace}{BeepTrace}
+    \slds{intro-iota}{IOTA}
+    \slds{intro-privacy}{Privacy}
+
+    \sec{Architecture}
+    \slds{arc-agent}{Agents}
+    \slds{arc-diagnostician}{Diagnosticians}
+    \slds{arc-geosolver}{GeoSolver}
+    
+    \sec{Simulation}
+    \sld{sim-motivation}{Motivation}
+    \sld{sim-scenario}{Scenario}
+    \sld{sim-keymoments}{Key Moments}
+    
+    \sec{Future Works}
+    \sld{fw-deployment}{Deployment}
+\end{document}

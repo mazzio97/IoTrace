@@ -1,0 +1,22 @@
+\begin{block}{IoT Context}
+    \begin{itemize} 
+        \item We developed a \textbf{simulator} since we did not have the possibility to run tests in a real world context
+        \item A real-word application should be deployed for mobile devices
+        \begin{itemize}
+            \item [$\Rightarrow$] the "\textbf{back-end}" part for this application can be easily adapted from our code
+            \item [$\Rightarrow$] the simulator should only be used for regression tests
+            \item [$\Rightarrow$] the "\textbf{front-end}" must use device sensors API 
+            \item [$\Rightarrow$] Some suitable form of \textbf{pub/sub} mechanism for IoT (e.g. MQTT)
+        \end{itemize} 
+    \end{itemize}
+\end{block}
+
+\vspace{5pt}
+
+\begin{block}{Scalability Issues}
+    \begin{itemize}
+        \item Our simulation runs on a single computer
+        \item We managed to simulate concurrency through multiple threads
+        \item We could not consider possible scalability issues regarding computation, memory consumption and throughput, problems also present in the original paper
+    \end{itemize} 
+\end{block}

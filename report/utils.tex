@@ -1,0 +1,44 @@
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{wrapfig}
+\usepackage{xargs}
+\usepackage{courier}
+\usepackage{ragged2e}
+
+\defbeamertemplate{description item}{align left}{\insertdescriptionitem\hfill}
+\setbeamertemplate{description item}[align left]
+
+\definecolor{mybold}{RGB}{55, 55, 179}
+
+\renewcommandx{\sec}[1]{
+    \section{#1}
+    
+    \begin{frame}[noframenumbering, plain]{#1}
+        \tableofcontents[currentsection, subsectionstyle=show/show/hide, subsubsectionstyle=show/hide/show]
+    \end{frame}
+}
+
+\newcommandx{\sld}[3][3 = ]{
+    \ifstrequal{#3}{none}{}{%
+        \ifstrequal{#3}{}{%
+            \subsection{#2}
+        }{%
+            \subsection{#3}
+        }%
+    }%
+    \begin{frame}{#2}
+        \input{slides/#1.tex}
+    \end{frame}
+}
+
+\newcommandx{\slds}[2]{
+    \subsection{#2}
+    \input{slides/#1.tex}
+}
+
+\newcommandx{\js}[1]{
+    \begin{justify}#1\end{justify}%
+}

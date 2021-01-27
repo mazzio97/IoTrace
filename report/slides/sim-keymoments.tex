@@ -1,0 +1,19 @@
+\begin{block}{Beginning}
+    \begin{itemize}
+        \item[1.] Only one agent is infected at the beginning of the simulation.
+        \item[2.] All the agents subscribe to the geosolver communicating their MAM channels.
+        \item[3.] When the simulation starts, agents move from their initial position and interact each other.
+    \end{itemize}
+\end{block}
+
+\begin{block}{Patient Zero}
+    \begin{itemize}
+        \item[1.] Infection continues to spread across the agents until one infected goes to his diagnostician.
+        \item[2.] The geosolver has now enough information to calculate some possible other threatening users and writes their IDs in its MAM channel.
+        \item[3.] Each agent, notified by the geosolver, compare his ID with the ones written in the geosolver's channel to understand if he needs to go to the diagnostician.
+    \end{itemize}
+\end{block}
+
+\begin{block}{Convergence}
+    As more infected users are discovered, more gets notified and the convergence is reached when no more infected agents circulate in the simulated environment.
+\end{block}
