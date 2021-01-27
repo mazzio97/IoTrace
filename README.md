@@ -36,3 +36,5 @@ You can edit any file in `src` and automatically new changes will be recompiled 
 ## Compatibility
 
 Due to the use of experimental JS features for parallelization, compatibility is guaranteed only for **Chromium based browsers** (e.g. Google Chrome, Brave).
+
+![Alt Text](report/images/demo.gif)
